@@ -1,36 +1,261 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# REST API Trainer — Платформа для изучения REST API и Requirements Engineering
 
-## Getting Started
+Полнофункциональное веб-приложение для самостоятельного изучения REST API и инженерии требований с интерактивными тестами, теоретическими материалами и встроенным таймером Помодоро.
 
-First, run the development server:
+## 🎯 Описание проекта
 
+**REST API Trainer** — это образовательная платформа, которая помогает изучать:
+- 📡 **REST API** — HTTP методы, статус коды, архитектурные паттерны, безопасность
+- 📋 **Requirements Engineering** — функциональные и нефункциональные требования, работа с User Stories, приоритизация
+
+### Что умеет платформа:
+
+✅ **Интерактивное тестирование**
+- 42+ теста по REST API и требованиям к ПО
+- Три уровня сложности: Beginner, Intermediate, Advanced
+- Детальные объяснения правильных ответов
+- Автоматическое сохранение прогресса
+
+✅ **Теоретические материалы**
+- Лекции с простыми объяснениями и примерами из жизни
+- Практические сценарии из реальных проектов
+- Разбор типичных ошибок
+- Markdown контент с подсветкой кода
+
+✅ **Система профессий**
+- Специализированные подборки тестов для:
+  - 📊 Системного аналитика
+  - 🧪 QA Engineer
+  - 💻 Frontend разработчика
+  - ⚙️ Backend разработчика
+  - 🌐 Fullstack разработчика
+- Марафонские тесты для каждой профессии
+
+✅ **Таймер Помодоро**
+- Встроенный таймер для продуктивной учебы
+- Три режима: работа (25 мин), короткий перерыв (5 мин), длинный перерыв (15 мин)
+- Статистика продуктивности
+- Виджет таймера на всех страницах
+
+✅ **Персональный прогресс**
+- История прохождения всех тестов
+- Статистика по каждому тесту
+- Возможность пересдачи
+- Отслеживание улучшения результатов
+
+---
+
+## 🚀 Быстрый старт
+
+### Требования
+- Node.js 18+
+- PostgreSQL 14+
+
+### Установка
+
+1. **Клонируйте репозиторий**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd rest-api-trainer
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Установите зависимости**
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. **Настройте базу данных**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Создайте файл `.env`:
+```env
+DATABASE_URL="postgresql://postgres:password@localhost:5432/rest_api_trainer"
+NEXTAUTH_SECRET="your-secret-key-here"
+NEXTAUTH_URL="http://localhost:3000"
+```
 
-## Learn More
+4. **Примените миграции и заполните БД**
+```bash
+npx prisma migrate dev
+npm run seed
+```
 
-To learn more about Next.js, take a look at the following resources:
+5. **Запустите приложение**
+```bash
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Откройте [http://localhost:3000](http://localhost:3000)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 📚 Структура контента
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### REST API (19 тестов, 383 вопроса)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Beginner** (6 тестов)
+- HTTP методы: основы
+- HTTP статус коды: успешные (2xx)
+- HTTP статус коды: ошибки клиента (4xx)
+- HTTP статус коды: ошибки сервера (5xx)
+- Content-Type и форматы данных
+- URL структура и Query параметры
+
+**Intermediate** (6 тестов)
+- Authorization и Authentication
+- CRUD операции
+- Идемпотентность
+- Pagination
+- Фильтрация и сортировка
+- Обработка ошибок
+
+**Advanced** (7 тестов)
+- Naming conventions и best practices
+- Версионирование API
+- HATEOAS
+- Кеширование
+- Rate Limiting
+- Batching и Bulk операции
+- Марафон (все 383 вопроса)
+
+### Requirements Engineering (23 теста)
+
+**Beginner** (7 тестов)
+- Основы требований к ПО
+- Нефункциональные требования
+- Функциональные требования
+- Приоритизация (MoSCoW, Kano)
+- Сбор требований
+- Требования в Agile и Waterfall
+- И др.
+
+**Intermediate** (10 тестов)
+- Роли аналитиков: BA и SA
+- User Stories и Use Cases
+- Валидация и верификация
+- Трассируемость требований
+- UI/UX и Usability требования
+- И др.
+
+**Advanced** (6 тестов)
+- Требования к масштабируемости и надежности
+- Performance Requirements
+- Security Requirements
+- Compliance требования
+- Architecture Requirements
+- Марафоны по профессиям
+
+---
+
+## 🛠 Технологический стек
+
+- **Frontend:** Next.js 16 (App Router), React 19, TypeScript
+- **Styling:** CSS Modules + SCSS
+- **State Management:** Redux Toolkit + Context API
+- **Backend:** Next.js API Routes
+- **Database:** PostgreSQL + Prisma ORM
+- **Authentication:** NextAuth.js + bcryptjs
+
+---
+
+## 📖 Документация
+
+### Для разработчиков
+
+- **[CLAUDE.md](CLAUDE.md)** — Руководство для Claude Code (команды, архитектура, паттерны)
+- **[docs/LECTURE_CREATION_GUIDE.md](docs/LECTURE_CREATION_GUIDE.md)** — Как создавать лекции
+- **[docs/QUESTION_CREATION_GUIDE.md](docs/QUESTION_CREATION_GUIDE.md)** — Как создавать тесты и вопросы
+- **[docs/MANY_TO_MANY_USAGE.md](docs/MANY_TO_MANY_USAGE.md)** — Many-to-Many архитектура (категории, тесты, вопросы)
+
+### Основные команды
+
+```bash
+# Разработка
+npm run dev          # Запуск dev сервера
+npm run build        # Production сборка
+npm run start        # Запуск production сервера
+npm run lint         # ESLint проверка
+
+# База данных
+npx prisma migrate dev       # Создать миграцию
+npx prisma db push          # Синхронизировать схему
+npx prisma generate         # Регенерировать Prisma Client
+npx prisma studio           # Открыть Prisma Studio (GUI)
+npm run seed                # Заполнить БД тестами
+
+# Скрипты
+npx tsx scripts/check-final-state.ts        # Статистика тестов
+npx tsx scripts/create-marathon-test.ts     # Создать марафон
+```
+
+---
+
+## 🏗 Архитектура
+
+### Many-to-Many связи
+
+**Category ↔ Test ↔ Question**
+- Один тест может быть в нескольких категориях
+- Один вопрос может использоваться в нескольких тестах
+- Гибкая организация контента без дублирования данных
+
+### Ключевые модели
+
+```prisma
+model User {
+  id               String            @id @default(cuid())
+  email            String            @unique
+  password         String
+  testResults      TestResult[]
+  pomodoroSessions PomodoroSession[]
+}
+
+model Test {
+  id          String         @id @default(cuid())
+  title       String
+  difficulty  String         // beginner | intermediate | advanced
+  questions   TestQuestion[] // Many-to-Many
+  categories  CategoryTest[] // Many-to-Many
+}
+
+model Question {
+  id            String         @id @default(cuid())
+  question      String
+  options       Json
+  correctAnswer Int
+  explanation   String
+  lectureId     String?
+  tests         TestQuestion[] // Many-to-Many
+}
+
+model Lecture {
+  id        String     @id @default(cuid())
+  title     String
+  topic     String     @unique
+  content   String     @db.Text // Markdown контент
+  questions Question[]
+}
+```
+
+Подробности: [docs/MANY_TO_MANY_USAGE.md](docs/MANY_TO_MANY_USAGE.md)
+
+---
+
+## 🤝 Вклад в проект
+
+Хотите добавить новые тесты или улучшить лекции?
+
+1. Изучите [docs/QUESTION_CREATION_GUIDE.md](docs/QUESTION_CREATION_GUIDE.md)
+2. Изучите [docs/LECTURE_CREATION_GUIDE.md](docs/LECTURE_CREATION_GUIDE.md)
+3. Создайте свой скрипт в `scripts/`
+4. Протестируйте изменения
+5. Отправьте Pull Request
+
+---
+
+## 📜 Лицензия
+
+MIT
+
+---
+
+**Разработано с использованием Claude Code** 🤖

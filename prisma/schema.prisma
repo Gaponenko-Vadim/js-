@@ -1,0 +1,265 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                     String                  @id @default(cuid())
+  email                  String                  @unique
+  password               String
+  name                   String?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  testResults            TestResult[]
+  pomodoroSessions       PomodoroSession[]
+  testLists              UserTestList[]          // Пользовательские списки тестов
+  combinedTestResults    CombinedTestResult[]    // Результаты комбинированных тестов
+}
+
+model Category {
+  id          String         @id @default(cuid())
+  name        String         @unique // Например: "REST API", "Requirements"
+  slug        String         @unique // Например: "rest-api", "requirements"
+  description String
+  icon        String         // Эмодзи иконка
+  order       Int            @default(0) // Порядок отображения
+
+  // Иерархия категорий (опционально)
+  parentId    String?
+  parent      Category?      @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[]     @relation("CategoryHierarchy")
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @default(now()) @updatedAt
+
+  // Many-to-Many с тестами через CategoryTest
+  tests       CategoryTest[]
+
+  @@index([slug])
+  @@index([parentId])
+}
+
+model Test {
+  id          String         @id @default(cuid())
+  title       String
+  description String
+  difficulty  String
+  tags        String[]       @default([]) // Профессии: system-analyst, qa-engineer, frontend, backend, fullstack
+
+  // СТАРОЕ ПОЛЕ - НЕ УДАЛЯЕМ ПОКА! Понадобится для миграции данных
+  categoryId  String?        @map("category_id") // Связь с категорией (DEPRECATED, будет удалено после миграции)
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @default(now()) @updatedAt
+
+  // Many-to-Many связи
+  categories  CategoryTest[]     // Новая связь через junction table
+  collections CollectionTest[]   // Связь с коллекциями
+  questions   TestQuestion[]
+  results     TestResult[]
+  userLists   UserTestListItem[] // Связь с пользовательскими списками
+
+  @@index([categoryId])
+  @@index([difficulty])
+}
+
+model Question {
+  id            String         @id @default(cuid())
+  question      String
+  options       Json           // Array of strings
+  correctAnswer Int
+  explanation   String
+  lectureId     String?        // Связь с лекцией (опционально)
+  lecture       Lecture?       @relation(fields: [lectureId], references: [id], onDelete: SetNull)
+  createdAt     DateTime       @default(now())
+  tests         TestQuestion[]
+}
+
+model TestQuestion {
+  id         String   @id @default(cuid())
+  testId     String
+  questionId String
+  order      Int      // Порядок вопроса в конкретном тесте
+  test       Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([testId, questionId])
+  @@index([testId, order])
+}
+
+model TestResult {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testId      String
+  test        Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  answers     Json
+  score       Int
+  completedAt DateTime @default(now())
+}
+
+model PomodoroSession {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  duration    Int
+  type        String
+  completedAt DateTime @default(now())
+}
+
+// Результаты прохождения комбинированных тестов (из пользовательских списков)
+model CombinedTestResult {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  listName      String   // Название списка
+  testIds       String[] // Массив ID тестов, которые входили в комбинированный тест
+
+  totalScore    Int      // Общий процент (0-100)
+  totalQuestions Int     // Общее количество вопросов
+  correctAnswers Int     // Количество правильных ответов
+
+  // Детальные результаты по каждому тесту
+  testScores    Json     // { "testId": { "score": 85, "correct": 17, "total": 20, "title": "Test Name" } }
+
+  completedAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([completedAt])
+  @@map("combined_test_results")
+}
+
+model Lecture {
+  id          String     @id @default(cuid())
+  title       String     // Название лекции
+  topic       String     // Тема (например, "HTTP методы и основы")
+  content     String     @db.Text // Содержимое лекции (Markdown)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  questions   Question[] // Связанные вопросы
+}
+
+// ============================================================
+// НОВЫЕ МОДЕЛИ: Many-to-Many архитектура
+// ============================================================
+
+// Junction table: Category ↔ Test (Many-to-Many)
+model CategoryTest {
+  id         String   @id @default(cuid())
+  categoryId String
+  testId     String
+  order      Int      @default(0) // Порядок теста в категории
+
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  test       Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+
+  @@unique([categoryId, testId])
+  @@index([categoryId, order])
+  @@map("category_tests")
+}
+
+// Коллекции (Сборные программы обучения)
+model Collection {
+  id             String           @id @default(cuid())
+  name           String           @unique // "Всё для системного аналитика"
+  slug           String           @unique // "system-analyst-full"
+  description    String
+  icon           String           // 📊
+
+  // Тип коллекции
+  type           String           @default("custom") // "profession", "learning-path", "custom"
+
+  // Целевая роль
+  targetRole     String?          // "system-analyst", "qa-engineer", etc.
+
+  // Метаданные
+  estimatedHours Int?             // Примерное время прохождения
+  level          String?          // "beginner", "intermediate", "advanced", "mixed"
+
+  order          Int              @default(0)
+  isPublished    Boolean          @default(true)
+
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  // Many-to-Many с тестами
+  tests          CollectionTest[]
+
+  @@index([slug])
+  @@index([type])
+  @@index([targetRole])
+}
+
+// Junction table: Collection ↔ Test (Many-to-Many)
+model CollectionTest {
+  id           String     @id @default(cuid())
+  collectionId String
+  testId       String
+  order        Int        @default(0) // Порядок в программе обучения
+  isRequired   Boolean    @default(true) // Обязательный или опциональный
+
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  test         Test       @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime   @default(now())
+
+  @@unique([collectionId, testId])
+  @@index([collectionId, order])
+  @@map("collection_tests")
+}
+
+// ============================================================
+// ПОЛЬЗОВАТЕЛЬСКИЕ СПИСКИ ТЕСТОВ
+// ============================================================
+
+// Пользовательский список тестов (аналог плейлиста)
+model UserTestList {
+  id          String             @id @default(cuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String             // Название списка (например: "Повторить перед собеседованием")
+  description String?            // Опциональное описание
+  icon        String             @default("📋") // Эмодзи иконка
+  color       String             @default("#667eea") // Цвет для визуализации
+
+  isPublic    Boolean            @default(false) // Можно ли делиться списком
+
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  // Many-to-Many с тестами
+  items       UserTestListItem[]
+
+  @@index([userId])
+  @@map("user_test_lists")
+}
+
+// Junction table: UserTestList ↔ Test (Many-to-Many)
+model UserTestListItem {
+  id         String       @id @default(cuid())
+  listId     String
+  testId     String
+  order      Int          @default(0) // Порядок теста в списке
+
+  list       UserTestList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  test       Test         @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  addedAt    DateTime     @default(now())
+
+  @@unique([listId, testId])
+  @@index([listId, order])
+  @@map("user_test_list_items")
+}

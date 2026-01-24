@@ -1,0 +1,191 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  padding: 32px;
+}
+
+.modeSelector {
+  display: flex;
+  gap: 8px;
+  background: white;
+  padding: 4px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.modeButton {
+  padding: 12px 24px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f3f4f6;
+  }
+
+  &.active {
+    background: #667eea;
+    color: white;
+  }
+}
+
+.timerCircle {
+  position: relative;
+  width: 300px;
+  height: 300px;
+}
+
+.progressRing {
+  transform: rotate(-90deg);
+}
+
+.progressRingProgress {
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+.timeDisplay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.time {
+  display: block;
+  font-size: 64px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.modeLabel {
+  display: block;
+  font-size: 16px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.controls {
+  display: flex;
+  gap: 16px;
+}
+
+.controlButton {
+  padding: 16px 48px;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &.primary {
+    background: #667eea;
+    color: white;
+
+    &:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+  }
+
+  &.secondary {
+    background: white;
+    color: #6b7280;
+    border: 2px solid #e5e7eb;
+
+    &:hover {
+      background: #f9fafb;
+      border-color: #d1d5db;
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.stats {
+  background: white;
+  padding: 24px 48px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.statValue {
+  font-size: 48px;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.statLabel {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.infoBox {
+  background: #eef2ff;
+  border: 2px solid #667eea;
+  border-radius: 12px;
+  padding: 16px 24px;
+  margin-top: 24px;
+}
+
+.infoText {
+  font-size: 14px;
+  color: #4338ca;
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .modeSelector {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .modeButton {
+    width: 100%;
+    text-align: center;
+  }
+
+  .timerCircle {
+    width: 250px;
+    height: 250px;
+  }
+
+  .time {
+    font-size: 48px;
+  }
+
+  .controls {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .controlButton {
+    width: 100%;
+  }
+}
