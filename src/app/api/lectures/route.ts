@@ -48,25 +48,28 @@ export async function GET(req: NextRequest) {
       orderBy: { topic: 'asc' },
     });
 
-    // Фильтруем лекции по категории если указана
-    let filteredLectures = lectures;
+    const lectureTitles = lectures.map((lecture) => lecture.title);
+    const testsByTitle = lectureTitles.length > 0
+      ? await prisma.test.findMany({
+          where: { title: { in: lectureTitles } },
+          include: {
+            categories: {
+              include: {
+                category: { select: { slug: true } }
+              }
+            }
+          }
+        })
+      : [];
 
-    if (categorySlug) {
-      filteredLectures = lectures.filter((lecture) => {
-        // Проверяем есть ли у лекции вопросы связанные с тестами данной категории
-        return lecture.questions.some((question) =>
-          question.tests.some((testQuestion) =>
-            testQuestion.test.categories.some(
-              (ct) => ct.category.slug === categorySlug
-            )
-          )
-        );
-      });
-    }
+    const testCategoriesByTitle = new Map<string, string[]>();
+    testsByTitle.forEach((test) => {
+      const slugs = test.categories.map((ct) => ct.category.slug);
+      testCategoriesByTitle.set(test.title, slugs);
+    });
 
-    // Преобразуем в удобный формат для фронтенда
-    const formattedLectures = filteredLectures.map((lecture) => {
-      // Определяем категории для каждой лекции
+    const lectureCategoriesById = new Map<string, string[]>();
+    lectures.forEach((lecture) => {
       const categories = new Set<string>();
       lecture.questions.forEach((question) => {
         question.tests.forEach((testQuestion) => {
@@ -76,13 +79,39 @@ export async function GET(req: NextRequest) {
         });
       });
 
+      const fallbackCategories = testCategoriesByTitle.get(lecture.title);
+      if (fallbackCategories) {
+        fallbackCategories.forEach((slug) => categories.add(slug));
+      }
+
+      lectureCategoriesById.set(lecture.id, Array.from(categories));
+    });
+
+    // Фильтруем лекции по категории если указана
+    let filteredLectures = lectures;
+
+    if (categorySlug) {
+      filteredLectures = lectures.filter((lecture) => {
+        const categories = lectureCategoriesById.get(lecture.id) ?? [];
+        return categories.includes(categorySlug);
+      });
+    }
+
+
+    // Преобразуем в удобный формат для фронтенда
+    const formattedLectures = filteredLectures.map((lecture) => {
+      const categories = lectureCategoriesById.get(lecture.id) ?? [];
+
       return {
         id: lecture.id,
         title: lecture.title,
         topic: lecture.topic,
         content: lecture.content,
+        scenariosContent: lecture.scenariosContent,
+        exampleContent: lecture.exampleContent,
+        tasksContent: lecture.tasksContent,
         questionsCount: lecture.questions.length,
-        categories: Array.from(categories),
+        categories,
       };
     });
 

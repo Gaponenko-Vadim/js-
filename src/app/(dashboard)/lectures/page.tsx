@@ -3,9 +3,8 @@
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import DashboardHeader from '@/components/layout/DashboardHeader';
+import LectureModal from '@/components/lecture/LectureModal';
 import styles from './lectures.module.scss';
 
 type Category = {
@@ -45,7 +44,6 @@ function LecturesPageContent() {
     }
   }, [status, router]);
 
-  // Читаем query параметр category из URL при монтировании
   useEffect(() => {
     const categoryParam = searchParams.get('category');
     if (categoryParam) {
@@ -113,7 +111,6 @@ function LecturesPageContent() {
 
   const currentCategory = categories.find((c) => c.slug === selectedCategory);
 
-  // Если категория не выбрана, показываем только экран выбора категории
   if (!selectedCategory) {
     return (
       <div className={styles.container}>
@@ -132,7 +129,6 @@ function LecturesPageContent() {
                   key={category.id}
                   className={styles.categoryButton}
                   onClick={() => {
-                    // Обновляем URL с параметром category
                     router.push(`/lectures?category=${category.slug}`);
                     setSelectedCategory(category.slug);
                   }}
@@ -153,7 +149,6 @@ function LecturesPageContent() {
     );
   }
 
-  // Если категория выбрана, показываем лекции
   return (
     <div className={styles.container}>
       <DashboardHeader />
@@ -162,7 +157,6 @@ function LecturesPageContent() {
         <button
           className={styles.backButton}
           onClick={() => {
-            // Возвращаемся к странице выбора категорий
             router.push('/lectures');
             setSelectedCategory(null);
             setSelectedLecture(null);
@@ -183,38 +177,7 @@ function LecturesPageContent() {
       <main className={styles.main}>
         {loading ? (
           <div className={styles.loadingLectures}>Загрузка лекций...</div>
-        ) : selectedLecture ? (
-          // Показываем выбранную лекцию
-          <div className={styles.lectureView}>
-            <div className={styles.lectureModal}>
-              <div className={styles.lectureModalHeader}>
-                <div className={styles.lectureModalHeaderContent}>
-                  <span className={styles.lectureTopic}>{selectedLecture.topic}</span>
-                  <h2>{selectedLecture.title}</h2>
-                  <p className={styles.lectureInfo}>
-                    📖 Связано с {selectedLecture.questionsCount} вопросами
-                  </p>
-                </div>
-                <button
-                  className={styles.closeButton}
-                  onClick={() => setSelectedLecture(null)}
-                  aria-label="Закрыть"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className={styles.lectureModalContent}>
-                <div className={styles.markdown}>
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {selectedLecture.content}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            </div>
-          </div>
         ) : (
-          // Показываем список лекций
           <>
             <div className={styles.lecturesCount}>
               <p>Всего лекций: {lectures.length}</p>
@@ -247,6 +210,14 @@ function LecturesPageContent() {
               </div>
             )}
           </>
+        )}
+
+        {selectedLecture && (
+          <LectureModal
+            lectureId={selectedLecture.id}
+            isOpen={true}
+            onClose={() => setSelectedLecture(null)}
+          />
         )}
       </main>
     </div>

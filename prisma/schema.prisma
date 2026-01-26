@@ -17,12 +17,14 @@ model User {
   email                  String                  @unique
   password               String
   name                   String?
+  skipTasksWarning       Boolean                 @default(false)
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
   testResults            TestResult[]
   pomodoroSessions       PomodoroSession[]
   testLists              UserTestList[]          // Пользовательские списки тестов
   combinedTestResults    CombinedTestResult[]    // Результаты комбинированных тестов
+  taskProgress           LectureTaskProgress[]
 }
 
 model Category {
@@ -144,11 +146,29 @@ model Lecture {
   title       String     // Название лекции
   topic       String     // Тема (например, "HTTP методы и основы")
   content     String     @db.Text // Содержимое лекции (Markdown)
+  scenariosContent String? @db.Text // Сценарии (Markdown), отдельная вкладка
+  exampleContent String? @db.Text // Пример (Markdown), отдельная вкладка
+  tasksContent String? @db.Text // Задания (Markdown), отдельная вкладка
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   questions   Question[] // Связанные вопросы
+  taskProgress LectureTaskProgress[]
 }
 
+model LectureTaskProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  lectureId   String
+  taskId      String
+  completedAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lecture Lecture @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lectureId, taskId])
+  @@index([userId])
+  @@index([lectureId])
+}
 // ============================================================
 // НОВЫЕ МОДЕЛИ: Many-to-Many архитектура
 // ============================================================
@@ -263,3 +283,7 @@ model UserTestListItem {
   @@index([listId, order])
   @@map("user_test_list_items")
 }
+
+
+
+

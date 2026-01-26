@@ -267,196 +267,212 @@ export default function ResultsPage() {
             ) : (
               <div className={styles.resultsList}>
                 <h2>История тестов</h2>
-            {groupedResults.map((group) => {
-              const isExpanded = expandedTests.has(group.testId);
-              const bestResult = group.results.find((r) => r.score === group.bestScore)!;
+                {groupedResults.map((group) => {
+                  const isExpanded = expandedTests.has(group.testId);
+                  const bestResult = group.results.find((r) => r.score === group.bestScore)!;
 
-              return (
-                <div key={group.testId} className={styles.groupedResultCard}>
-                  {/* Лучший результат - всегда виден */}
-                  <div className={styles.resultCard}>
-                    <div className={styles.resultHeader}>
-                      <div className={styles.resultInfo}>
-                        <h3>{group.testTitle}</h3>
-                        <div className={styles.badges}>
-                          <span className={`${styles.badge} ${getDifficultyColor(group.difficulty)}`}>
-                            {getDifficultyLabel(group.difficulty)}
-                          </span>
-                          {group.attemptsCount > 1 && (
-                            <span className={styles.attemptsBadge}>
-                              {group.attemptsCount} {group.attemptsCount === 1 ? 'попытка' : group.attemptsCount < 5 ? 'попытки' : 'попыток'}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className={`${styles.score} ${getScoreColor(group.bestScore)}`}>
-                        {group.bestScore}%
-                      </div>
-                    </div>
-                    <div className={styles.resultFooter}>
-                      <span className={styles.date}>
-                        Лучший результат • {new Date(bestResult.completedAt).toLocaleDateString('ru-RU', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                      <div className={styles.actions}>
-                        {group.attemptsCount > 1 && (
-                          <button
-                            onClick={() => toggleTestExpanded(group.testId)}
-                            className={styles.expandButton}
-                          >
-                            {isExpanded ? '▲ Свернуть' : `▼ Показать все (${group.attemptsCount})`}
-                          </button>
-                        )}
-                        <Link href={`/tests/${group.testId}`} className={styles.retakeButton}>
-                          Пройти снова
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Остальные попытки - показываются при раскрытии */}
-                  {isExpanded && group.attemptsCount > 1 && (
-                    <div className={styles.expandedResults}>
-                      <h4>Все попытки:</h4>
-                      {group.results.map((result, index) => (
-                        <div key={result.id} className={styles.attemptCard}>
-                          <div className={styles.attemptInfo}>
-                            <div className={styles.attemptNumber}>
-                              <span className={styles.attemptIcon}>🎯</span>
-                              <span className={styles.attemptLabel}>Попытка</span>
-                              <span className={styles.attemptBadge}>#{group.attemptsCount - index}</span>
+                  return (
+                    <div key={group.testId} className={styles.groupedResultCard}>
+                      <div className={styles.resultCard}>
+                        <div className={styles.resultHeader}>
+                          <div className={styles.resultInfo}>
+                            <h3>{group.testTitle}</h3>
+                            <div className={styles.badges}>
+                              <span className={`${styles.badge} ${getDifficultyColor(group.difficulty)}`}>
+                                {getDifficultyLabel(group.difficulty)}
+                              </span>
+                              {group.attemptsCount > 1 && (
+                                <span className={styles.attemptsBadge}>
+                                  {group.attemptsCount}{' '}
+                                  {group.attemptsCount === 1
+                                    ? 'попытка'
+                                    : group.attemptsCount < 5
+                                      ? 'попытки'
+                                      : 'попыток'}
+                                </span>
+                              )}
                             </div>
-                            <span className={styles.attemptDate}>
-                              {new Date(result.completedAt).toLocaleDateString('ru-RU', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
-                            </span>
                           </div>
-                          <div className={`${styles.attemptScore} ${getScoreColor(result.score)}`}>
-                            {result.score}%
+                          <div className={`${styles.score} ${getScoreColor(group.bestScore)}`}>
+                            {group.bestScore}%
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </>
-    ) : (
-      <>
-        <div className={styles.stats}>
-          <div className={styles.statCard}>
-            <span className={styles.statValue}>{combinedTestsCount}</span>
-            <span className={styles.statLabel}>Пройдено списков</span>
-          </div>
-          <div className={styles.statCard}>
-            <span className={styles.statValue}>{totalCombinedQuestions}</span>
-            <span className={styles.statLabel}>Всего вопросов</span>
-          </div>
-          <div className={styles.statCard}>
-            <span className={styles.statValue}>{combinedAverageScore}%</span>
-            <span className={styles.statLabel}>Средний балл</span>
-          </div>
-          <div className={styles.statCard}>
-            <span className={styles.statValue}>{excellentCombinedResults}</span>
-            <span className={styles.statLabel}>Отличных результатов</span>
-          </div>
-        </div>
+                        <div className={styles.resultFooter}>
+                          <span className={styles.date}>
+                            Лучший результат •{' '}
+                            {new Date(bestResult.completedAt).toLocaleDateString('ru-RU', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                          <div className={styles.actions}>
+                            {group.attemptsCount > 1 && (
+                              <button
+                                onClick={() => toggleTestExpanded(group.testId)}
+                                className={styles.expandButton}
+                              >
+                                {isExpanded
+                                  ? '▲ Свернуть'
+                                  : `▼ Показать все (${group.attemptsCount})`}
+                              </button>
+                            )}
+                            <Link href={`/tests/${group.testId}`} className={styles.retakeButton}>
+                              Пройти снова
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
 
-        {combinedResults.length === 0 ? (
-          <div className={styles.noResults}>
-            <p>У вас пока нет результатов по своим спискам</p>
-            <Link href="/my-lists" className={styles.primaryButton}>
-              Перейти к спискам
-            </Link>
-          </div>
+                      {isExpanded && group.attemptsCount > 1 && (
+                        <div className={styles.expandedResults}>
+                          <h4>Все попытки:</h4>
+                          {group.results.map((result, index) => (
+                            <div key={result.id} className={styles.attemptCard}>
+                              <div className={styles.attemptInfo}>
+                                <div className={styles.attemptNumber}>
+                                  <span className={styles.attemptIcon}>🎯</span>
+                                  <span className={styles.attemptLabel}>Попытка</span>
+                                  <span className={styles.attemptBadge}>#{group.attemptsCount - index}</span>
+                                </div>
+                                <span className={styles.attemptDate}>
+                                  {new Date(result.completedAt).toLocaleDateString('ru-RU', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </span>
+                              </div>
+                              <div className={`${styles.attemptScore} ${getScoreColor(result.score)}`}>
+                                {result.score}%
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
         ) : (
-          <div className={styles.resultsList}>
-            <h2>История прохождения своих списков</h2>
-            {combinedResults.map((result) => {
-              const isExpanded = expandedCombined.has(result.id);
-              const testScoresArray = Object.entries(result.testScores);
+          <>
+            <div className={styles.stats}>
+              <div className={styles.statCard}>
+                <span className={styles.statValue}>{combinedTestsCount}</span>
+                <span className={styles.statLabel}>Пройдено списков</span>
+              </div>
+              <div className={styles.statCard}>
+                <span className={styles.statValue}>{totalCombinedQuestions}</span>
+                <span className={styles.statLabel}>Всего вопросов</span>
+              </div>
+              <div className={styles.statCard}>
+                <span className={styles.statValue}>{combinedAverageScore}%</span>
+                <span className={styles.statLabel}>Средний балл</span>
+              </div>
+              <div className={styles.statCard}>
+                <span className={styles.statValue}>{excellentCombinedResults}</span>
+                <span className={styles.statLabel}>Отличных результатов</span>
+              </div>
+            </div>
 
-              return (
-                <div key={result.id} className={styles.groupedResultCard}>
-                  <div className={styles.resultCard}>
-                    <div className={styles.resultHeader}>
-                      <div className={styles.resultInfo}>
-                        <h3>{result.listName}</h3>
-                        <div className={styles.badges}>
-                          <span className={styles.badge}>
-                            📋 {result.testIds.length} {result.testIds.length === 1 ? 'тест' : result.testIds.length < 5 ? 'теста' : 'тестов'}
-                          </span>
-                          <span className={styles.badge}>
-                            {result.totalQuestions} {result.totalQuestions === 1 ? 'вопрос' : result.totalQuestions < 5 ? 'вопроса' : 'вопросов'}
-                          </span>
-                        </div>
-                      </div>
-                      <div className={`${styles.score} ${getScoreColor(result.totalScore)}`}>
-                        {result.totalScore}%
-                      </div>
-                    </div>
-                    <div className={styles.resultFooter}>
-                      <span className={styles.date}>
-                        {new Date(result.completedAt).toLocaleDateString('ru-RU', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                      <div className={styles.actions}>
-                        <button
-                          onClick={() => toggleCombinedExpanded(result.id)}
-                          className={styles.expandButton}
-                        >
-                          {isExpanded ? '▲ Свернуть' : `▼ Показать детали`}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+            {combinedResults.length === 0 ? (
+              <div className={styles.noResults}>
+                <p>У вас пока нет результатов по своим спискам</p>
+                <Link href="/my-lists" className={styles.primaryButton}>
+                  Перейти к спискам
+                </Link>
+              </div>
+            ) : (
+              <div className={styles.resultsList}>
+                <h2>История прохождения своих списков</h2>
+                {combinedResults.map((result) => {
+                  const isExpanded = expandedCombined.has(result.id);
+                  const testScoresArray = Object.entries(result.testScores);
 
-                  {isExpanded && (
-                    <div className={styles.expandedResults}>
-                      <h4>Результаты по тестам:</h4>
-                      {testScoresArray.map(([testId, testData]) => (
-                        <div key={testId} className={styles.attemptCard}>
-                          <div className={styles.attemptInfo}>
-                            <div className={styles.attemptNumber}>
-                              <span className={styles.attemptIcon}>📝</span>
-                              <span className={styles.attemptLabel}>{testData.title}</span>
+                  return (
+                    <div key={result.id} className={styles.groupedResultCard}>
+                      <div className={styles.resultCard}>
+                        <div className={styles.resultHeader}>
+                          <div className={styles.resultInfo}>
+                            <h3>{result.listName}</h3>
+                            <div className={styles.badges}>
+                              <span className={styles.badge}>
+                                📋 {result.testIds.length}{' '}
+                                {result.testIds.length === 1
+                                  ? 'тест'
+                                  : result.testIds.length < 5
+                                    ? 'теста'
+                                    : 'тестов'}
+                              </span>
+                              <span className={styles.badge}>
+                                {result.totalQuestions}{' '}
+                                {result.totalQuestions === 1
+                                  ? 'вопрос'
+                                  : result.totalQuestions < 5
+                                    ? 'вопроса'
+                                    : 'вопросов'}
+                              </span>
                             </div>
-                            <span className={styles.attemptDate}>
-                              {testData.correct} из {testData.total} правильных
-                            </span>
                           </div>
-                          <div className={`${styles.attemptScore} ${getScoreColor(testData.score)}`}>
-                            {testData.score}%
+                          <div className={`${styles.score} ${getScoreColor(result.totalScore)}`}>
+                            {result.totalScore}%
                           </div>
                         </div>
-                      ))}
+                        <div className={styles.resultFooter}>
+                          <span className={styles.date}>
+                            {new Date(result.completedAt).toLocaleDateString('ru-RU', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                          <div className={styles.actions}>
+                            <button
+                              onClick={() => toggleCombinedExpanded(result.id)}
+                              className={styles.expandButton}
+                            >
+                              {isExpanded ? '▲ Свернуть' : '▼ Показать детали'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {isExpanded && (
+                        <div className={styles.expandedResults}>
+                          <h4>Результаты по тестам:</h4>
+                          {testScoresArray.map(([testId, testData]) => (
+                            <div key={testId} className={styles.attemptCard}>
+                              <div className={styles.attemptInfo}>
+                                <div className={styles.attemptNumber}>
+                                  <span className={styles.attemptIcon}>📝</span>
+                                  <span className={styles.attemptLabel}>{testData.title}</span>
+                                </div>
+                                <span className={styles.attemptDate}>
+                                  {testData.correct} из {testData.total} правильных
+                                </span>
+                              </div>
+                              <div className={`${styles.attemptScore} ${getScoreColor(testData.score)}`}>
+                                {testData.score}%
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
-      </>
-    )}
       </main>
     </div>
   );
