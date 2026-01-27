@@ -1,0 +1,345 @@
+@use '@/styles/tokens.scss' as *;
+@use '@/styles/utilities.scss' as *;
+
+.container {
+  @include flex-center;
+  min-height: 100vh;
+  padding: $spacing-xl;
+  background: $color-background;
+
+  @include mobile {
+    padding: $spacing-lg;
+  }
+}
+
+.card {
+  @include flex-column;
+  gap: $spacing-xl;
+  width: 100%;
+  max-width: 900px;
+  background: white;
+  border-radius: $border-radius-2xl;
+  padding: $spacing-xxl;
+  box-shadow: $shadow-xl;
+
+  @include mobile {
+    padding: $spacing-lg;
+    gap: $spacing-lg;
+  }
+}
+
+.modeBadge {
+  padding: $spacing-sm $spacing-lg;
+  background: $color-primary-light;
+  color: $color-primary;
+  border-radius: $border-radius-full;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  text-align: center;
+  align-self: center;
+}
+
+.title {
+  font-size: $font-size-4xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  text-align: center;
+  margin: 0;
+
+  @include mobile {
+    font-size: $font-size-3xl;
+  }
+}
+
+.scoreCircle {
+  @include flex-center;
+  @include flex-column;
+  gap: $spacing-sm;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+  background: $color-primary-gradient;
+  border-radius: $border-radius-full;
+  box-shadow: $shadow-2xl;
+  animation: scaleIn 0.5s ease-out;
+
+  @include mobile {
+    width: 160px;
+    height: 160px;
+  }
+}
+
+.scoreValue {
+  font-size: $font-size-4xl;
+  font-weight: $font-weight-bold;
+  color: white;
+  line-height: 1;
+
+  @include mobile {
+    font-size: $font-size-3xl;
+  }
+}
+
+.scoreLabel {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.details {
+  @include flex-column;
+  gap: $spacing-md;
+  padding: $spacing-lg;
+  background: $color-background;
+  border-radius: $border-radius-lg;
+  border: 1px solid $color-border;
+}
+
+.detailsText {
+  font-size: $font-size-lg;
+  color: $color-text-primary;
+  text-align: center;
+  margin: 0;
+  font-weight: $font-weight-semibold;
+}
+
+.learningNote,
+.examNote {
+  font-size: $font-size-md;
+  text-align: center;
+  margin: 0;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $border-radius-md;
+}
+
+.learningNote {
+  background: $color-warning-light;
+  color: $color-warning-dark;
+}
+
+.examNote {
+  background: $color-success-light;
+  color: $color-success-dark;
+}
+
+.reviewSection {
+  @include flex-column;
+  gap: $spacing-lg;
+  width: 100%;
+}
+
+.reviewHeader {
+  @include flex-between;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+}
+
+.reviewTitle {
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin: 0;
+
+  @include mobile {
+    font-size: $font-size-xl;
+  }
+}
+
+.lectureButton {
+  @include button-base;
+  @include button-variant($color-info, $color-info-dark, white);
+  padding: $spacing-sm $spacing-lg;
+  font-size: $font-size-sm;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+
+  @include mobile {
+    width: 100%;
+  }
+}
+
+.questionsList {
+  @include flex-column;
+  gap: $spacing-lg;
+}
+
+.reviewItem {
+  @include flex-column;
+  gap: $spacing-md;
+  padding: $spacing-lg;
+  background: white;
+  border-radius: $border-radius-lg;
+  border: 2px solid;
+  transition: $transition-all;
+
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+}
+
+.correct {
+  border-color: $color-success;
+  background: $color-success-light;
+}
+
+.incorrect {
+  border-color: $color-error;
+  background: $color-error-light;
+}
+
+.reviewItemHeader {
+  @include flex-between;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+}
+
+.questionNumber {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-secondary;
+}
+
+.resultBadge {
+  padding: $spacing-xs $spacing-md;
+  border-radius: $border-radius-full;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+}
+
+.correctBadge {
+  background: $color-success;
+  color: white;
+}
+
+.incorrectBadge {
+  background: $color-error;
+  color: white;
+}
+
+.reviewQuestion {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  line-height: $line-height-relaxed;
+  margin: 0;
+}
+
+.answerComparison {
+  @include flex-column;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  background: white;
+  border-radius: $border-radius-md;
+  border: 1px solid $color-border;
+}
+
+.wrongAnswer {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  padding: $spacing-sm;
+  background: $color-error-light;
+  border-radius: $border-radius-sm;
+  border-left: 4px solid $color-error;
+
+  strong {
+    color: $color-error;
+  }
+}
+
+.rightAnswer {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  padding: $spacing-sm;
+  background: $color-success-light;
+  border-radius: $border-radius-sm;
+  border-left: 4px solid $color-success;
+
+  strong {
+    color: $color-success;
+  }
+}
+
+.explanation {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  line-height: $line-height-relaxed;
+  padding: $spacing-md;
+  background: $color-info-light;
+  border-radius: $border-radius-md;
+  border-left: 4px solid $color-info;
+
+  strong {
+    color: $color-info-dark;
+  }
+}
+
+.questionLectureButton {
+  @include button-base;
+  background: transparent;
+  border: 2px solid $color-primary;
+  color: $color-primary;
+  font-size: $font-size-sm;
+  padding: $spacing-sm $spacing-md;
+  align-self: flex-start;
+
+  &:hover:not(:disabled) {
+    background: $color-primary;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: $shadow-sm;
+  }
+
+  @include mobile {
+    width: 100%;
+  }
+}
+
+.actions {
+  @include flex-row;
+  gap: $spacing-md;
+  width: 100%;
+  margin-top: $spacing-lg;
+
+  @include mobile {
+    @include flex-column;
+  }
+}
+
+.primaryButton {
+  @include button-base;
+  @include button-variant($color-primary, $color-primary-dark, white);
+  flex: 1;
+  font-size: $font-size-lg;
+  padding: $spacing-md $spacing-xl;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
+  }
+}
+
+.secondaryButton {
+  @include button-base;
+  @include button-variant($color-gray-200, $color-gray-300, $color-text-primary);
+  flex: 1;
+  padding: $spacing-md $spacing-xl;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

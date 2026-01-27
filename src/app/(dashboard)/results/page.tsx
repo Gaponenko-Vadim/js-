@@ -5,18 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import DashboardHeader from '@/components/layout/DashboardHeader';
+import { useGetResultsQuery, useGetCombinedResultsQuery, type TestResult, type CombinedTestResult } from '@/features/results';
 import styles from './results.module.scss';
-
-type TestResult = {
-  id: string;
-  score: number;
-  completedAt: string;
-  test: {
-    id: string;
-    title: string;
-    difficulty: string;
-  };
-};
 
 type GroupedResults = {
   testId: string;
@@ -27,70 +17,28 @@ type GroupedResults = {
   attemptsCount: number;
 };
 
-type CombinedTestResult = {
-  id: string;
-  listName: string;
-  testIds: string[];
-  totalScore: number;
-  totalQuestions: number;
-  correctAnswers: number;
-  testScores: Record<string, {
-    title: string;
-    score: number;
-    correct: number;
-    total: number;
-  }>;
-  completedAt: string;
-};
-
 export default function ResultsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [results, setResults] = useState<TestResult[]>([]);
-  const [combinedResults, setCombinedResults] = useState<CombinedTestResult[]>([]);
-  const [loading, setLoading] = useState(true);
   const [expandedTests, setExpandedTests] = useState<Set<string>>(new Set());
   const [expandedCombined, setExpandedCombined] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'regular' | 'combined'>('regular');
+
+  // RTK Query hooks
+  const { data: results = [], isLoading: resultsLoading } = useGetResultsQuery(undefined, {
+    skip: !session
+  });
+  const { data: combinedResults = [], isLoading: combinedLoading } = useGetCombinedResultsQuery(undefined, {
+    skip: !session
+  });
+
+  const loading = resultsLoading || combinedLoading;
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
-
-  useEffect(() => {
-    if (session) {
-      fetchResults();
-      fetchCombinedResults();
-    }
-  }, [session]);
-
-  const fetchResults = async () => {
-    try {
-      const response = await fetch('/api/results');
-      if (response.ok) {
-        const data = await response.json();
-        setResults(data);
-      }
-    } catch (error) {
-      console.error('Error fetching results:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchCombinedResults = async () => {
-    try {
-      const response = await fetch('/api/combined-results');
-      if (response.ok) {
-        const data = await response.json();
-        setCombinedResults(data);
-      }
-    } catch (error) {
-      console.error('Error fetching combined results:', error);
-    }
-  };
 
   if (status === 'loading' || loading) {
     return <div className={styles.loading}>Загрузка...</div>;
@@ -136,14 +84,15 @@ export default function ResultsPage() {
   const groupResultsByTest = (): GroupedResults[] => {
     const grouped = new Map<string, GroupedResults>();
 
-    results.forEach((result) => {
-      const testId = result.test.id;
+    // Фильтруем результаты, у которых есть test
+    results.filter(result => result.test).forEach((result) => {
+      const testId = result.test!.id;
 
       if (!grouped.has(testId)) {
         grouped.set(testId, {
           testId: testId,
-          testTitle: result.test.title,
-          difficulty: result.test.difficulty,
+          testTitle: result.test!.title,
+          difficulty: result.test!.difficulty,
           results: [],
           bestScore: 0,
           attemptsCount: 0,
@@ -159,13 +108,13 @@ export default function ResultsPage() {
     // Сортируем результаты внутри каждой группы по дате (новые сначала)
     grouped.forEach((group) => {
       group.results.sort((a, b) =>
-        new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     });
 
     // Преобразуем Map в массив и сортируем по дате последней попытки
     return Array.from(grouped.values()).sort((a, b) =>
-      new Date(b.results[0].completedAt).getTime() - new Date(a.results[0].completedAt).getTime()
+      new Date(b.results[0].createdAt).getTime() - new Date(a.results[0].createdAt).getTime()
     );
   };
 
@@ -300,7 +249,7 @@ export default function ResultsPage() {
                         <div className={styles.resultFooter}>
                           <span className={styles.date}>
                             Лучший результат •{' '}
-                            {new Date(bestResult.completedAt).toLocaleDateString('ru-RU', {
+                            {new Date(bestResult.createdAt).toLocaleDateString('ru-RU', {
                               year: 'numeric',
                               month: 'long',
                               day: 'numeric',
@@ -338,7 +287,7 @@ export default function ResultsPage() {
                                   <span className={styles.attemptBadge}>#{group.attemptsCount - index}</span>
                                 </div>
                                 <span className={styles.attemptDate}>
-                                  {new Date(result.completedAt).toLocaleDateString('ru-RU', {
+                                  {new Date(result.createdAt).toLocaleDateString('ru-RU', {
                                     year: 'numeric',
                                     month: 'long',
                                     day: 'numeric',
@@ -393,7 +342,7 @@ export default function ResultsPage() {
                 <h2>История прохождения своих списков</h2>
                 {combinedResults.map((result) => {
                   const isExpanded = expandedCombined.has(result.id);
-                  const testScoresArray = Object.entries(result.testScores);
+                  const testScoresArray = result.testScores ? Object.entries(result.testScores) : [];
 
                   return (
                     <div key={result.id} className={styles.groupedResultCard}>

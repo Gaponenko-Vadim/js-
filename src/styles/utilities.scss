@@ -1,0 +1,471 @@
+// ============================================
+// SCSS Utilities & Mixins - REST API Trainer
+// ============================================
+// Переиспользуемые mixins и utility классы
+// ============================================
+
+@use 'sass:color';
+@use '@/styles/tokens.scss' as *;
+
+// ============================================
+// LAYOUT MIXINS
+// ============================================
+
+// Flexbox shortcuts
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+@mixin flex-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+@mixin flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin flex-column-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+// Grid shortcuts
+@mixin grid-auto-fit($min-width: 300px, $gap: $spacing-md) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax($min-width, 1fr));
+  gap: $gap;
+}
+
+@mixin grid-auto-fill($min-width: 300px, $gap: $spacing-md) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax($min-width, 1fr));
+  gap: $gap;
+}
+
+// ============================================
+// RESPONSIVE MIXINS
+// ============================================
+
+@mixin mobile {
+  @media (max-width: #{$breakpoint-tablet - 1}) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: $breakpoint-tablet) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: $breakpoint-desktop) {
+    @content;
+  }
+}
+
+@mixin wide {
+  @media (min-width: $breakpoint-wide) {
+    @content;
+  }
+}
+
+@mixin ultrawide {
+  @media (min-width: $breakpoint-ultrawide) {
+    @content;
+  }
+}
+
+// Custom breakpoint
+@mixin respond-to($breakpoint) {
+  @media (min-width: $breakpoint) {
+    @content;
+  }
+}
+
+@mixin respond-to-max($breakpoint) {
+  @media (max-width: #{$breakpoint - 1}) {
+    @content;
+  }
+}
+
+// ============================================
+// POSITIONING MIXINS
+// ============================================
+
+@mixin absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@mixin absolute-full {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+@mixin fixed-full {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+// ============================================
+// VISUAL MIXINS
+// ============================================
+
+// Truncate text with ellipsis
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Multiline truncate
+@mixin line-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Hide scrollbar but keep scrollable
+@mixin hide-scrollbar {
+  -ms-overflow-style: none;  // IE and Edge
+  scrollbar-width: none;  // Firefox
+
+  &::-webkit-scrollbar {
+    display: none;  // Chrome, Safari, Opera
+  }
+}
+
+// Custom scrollbar
+@mixin custom-scrollbar($width: 8px, $track-color: $color-gray-200, $thumb-color: $color-gray-400) {
+  &::-webkit-scrollbar {
+    width: $width;
+    height: $width;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $track-color;
+    border-radius: $border-radius-md;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $thumb-color;
+    border-radius: $border-radius-md;
+
+    &:hover {
+      background: color.adjust($thumb-color, $lightness: -10%);
+    }
+  }
+}
+
+// Focus ring
+@mixin focus-ring($color: $color-primary, $offset: 2px) {
+  outline: 2px solid $color;
+  outline-offset: $offset;
+}
+
+// ============================================
+// ANIMATION MIXINS
+// ============================================
+
+@mixin transition($properties...) {
+  transition: $properties;
+}
+
+@mixin hover-lift($translate-y: -4px) {
+  transition: transform $transition-base, box-shadow $transition-base;
+
+  &:hover:not(:disabled) {
+    transform: translateY($translate-y);
+  }
+}
+
+@mixin hover-scale($scale: 1.05) {
+  transition: transform $transition-base;
+
+  &:hover:not(:disabled) {
+    transform: scale($scale);
+  }
+}
+
+// Fade in animation
+@mixin fade-in($duration: $transition-slow) {
+  animation: fadeIn $duration ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Slide in from bottom
+@mixin slide-up($duration: $transition-slow) {
+  animation: slideUp $duration ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ============================================
+// BUTTON MIXINS
+// ============================================
+
+@mixin button-base {
+  padding: $button-padding-md;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  border: none;
+  border-radius: $border-radius-md;
+  cursor: pointer;
+  transition: $transition-all;
+  font-family: $font-family-base;
+
+  &:disabled {
+    opacity: $opacity-disabled;
+    cursor: not-allowed;
+  }
+}
+
+@mixin button-variant($bg-color, $hover-color, $text-color: white) {
+  background: $bg-color;
+  color: $text-color;
+
+  &:hover:not(:disabled) {
+    background: $hover-color;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+// ============================================
+// CARD MIXINS
+// ============================================
+
+@mixin card-base {
+  background: $color-background-secondary;
+  padding: $card-padding-md;
+  border-radius: $card-border-radius;
+  box-shadow: $shadow-sm;
+  transition: $transition-all;
+}
+
+@mixin card-hover {
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-lg;
+  }
+}
+
+// ============================================
+// GRADIENT MIXINS
+// ============================================
+
+@mixin gradient-primary {
+  background: $color-primary-gradient;
+}
+
+@mixin gradient-success {
+  background: linear-gradient(135deg, $color-success 0%, $color-success-dark 100%);
+}
+
+@mixin gradient-warning {
+  background: linear-gradient(135deg, $color-warning 0%, $color-warning-dark 100%);
+}
+
+@mixin gradient-error {
+  background: linear-gradient(135deg, $color-error 0%, $color-error-dark 100%);
+}
+
+// ============================================
+// UTILITY CLASSES
+// ============================================
+
+// Text alignment
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+// Text transform
+.text-uppercase { text-transform: uppercase; }
+.text-lowercase { text-transform: lowercase; }
+.text-capitalize { text-transform: capitalize; }
+
+// Font weights
+.font-normal { font-weight: $font-weight-normal; }
+.font-medium { font-weight: $font-weight-medium; }
+.font-semibold { font-weight: $font-weight-semibold; }
+.font-bold { font-weight: $font-weight-bold; }
+
+// Truncate
+.truncate { @include truncate; }
+.line-clamp-2 { @include line-clamp(2); }
+.line-clamp-3 { @include line-clamp(3); }
+
+// Spacing utilities
+.m-0 { margin: 0; }
+.mt-0 { margin-top: 0; }
+.mb-0 { margin-bottom: 0; }
+
+.m-sm { margin: $spacing-sm; }
+.mt-sm { margin-top: $spacing-sm; }
+.mb-sm { margin-bottom: $spacing-sm; }
+.ml-sm { margin-left: $spacing-sm; }
+.mr-sm { margin-right: $spacing-sm; }
+
+.m-md { margin: $spacing-md; }
+.mt-md { margin-top: $spacing-md; }
+.mb-md { margin-bottom: $spacing-md; }
+.ml-md { margin-left: $spacing-md; }
+.mr-md { margin-right: $spacing-md; }
+
+.m-lg { margin: $spacing-lg; }
+.mt-lg { margin-top: $spacing-lg; }
+.mb-lg { margin-bottom: $spacing-lg; }
+.ml-lg { margin-left: $spacing-lg; }
+.mr-lg { margin-right: $spacing-lg; }
+
+.p-0 { padding: 0; }
+.pt-0 { padding-top: 0; }
+.pb-0 { padding-bottom: 0; }
+
+.p-sm { padding: $spacing-sm; }
+.pt-sm { padding-top: $spacing-sm; }
+.pb-sm { padding-bottom: $spacing-sm; }
+.pl-sm { padding-left: $spacing-sm; }
+.pr-sm { padding-right: $spacing-sm; }
+
+.p-md { padding: $spacing-md; }
+.pt-md { padding-top: $spacing-md; }
+.pb-md { padding-bottom: $spacing-md; }
+.pl-md { padding-left: $spacing-md; }
+.pr-md { padding-right: $spacing-md; }
+
+.p-lg { padding: $spacing-lg; }
+.pt-lg { padding-top: $spacing-lg; }
+.pb-lg { padding-bottom: $spacing-lg; }
+.pl-lg { padding-left: $spacing-lg; }
+.pr-lg { padding-right: $spacing-lg; }
+
+// Display utilities
+.d-none { display: none; }
+.d-block { display: block; }
+.d-inline { display: inline; }
+.d-inline-block { display: inline-block; }
+.d-flex { display: flex; }
+.d-grid { display: grid; }
+
+// Flex utilities
+.flex-center { @include flex-center; }
+.flex-between { @include flex-between; }
+.flex-start { @include flex-start; }
+.flex-end { @include flex-end; }
+.flex-column { @include flex-column; }
+
+.flex-1 { flex: 1; }
+.flex-shrink-0 { flex-shrink: 0; }
+.flex-wrap { flex-wrap: wrap; }
+
+// Gap utilities
+.gap-sm { gap: $spacing-sm; }
+.gap-md { gap: $spacing-md; }
+.gap-lg { gap: $spacing-lg; }
+
+// Width utilities
+.w-full { width: 100%; }
+.w-auto { width: auto; }
+
+// Height utilities
+.h-full { height: 100%; }
+.h-screen { height: 100vh; }
+
+// Position utilities
+.relative { position: relative; }
+.absolute { position: absolute; }
+.fixed { position: fixed; }
+.sticky { position: sticky; }
+
+// Visibility
+.hidden { visibility: hidden; }
+.visible { visibility: visible; }
+
+// Overflow
+.overflow-hidden { overflow: hidden; }
+.overflow-auto { overflow: auto; }
+.overflow-scroll { overflow: scroll; }
+
+// Cursor
+.cursor-pointer { cursor: pointer; }
+.cursor-not-allowed { cursor: not-allowed; }
+
+// User select
+.select-none { user-select: none; }
+.select-text { user-select: text; }
+
+// ============================================
+// MOBILE-FIRST RESPONSIVE UTILITIES
+// ============================================
+
+@include tablet {
+  .tablet\:d-none { display: none; }
+  .tablet\:d-block { display: block; }
+  .tablet\:d-flex { display: flex; }
+}
+
+@include desktop {
+  .desktop\:d-none { display: none; }
+  .desktop\:d-block { display: block; }
+  .desktop\:d-flex { display: flex; }
+}
+
+@include mobile {
+  .mobile\:text-center { text-align: center; }
+  .mobile\:w-full { width: 100%; }
+}

@@ -28,13 +28,14 @@ export async function GET(req: NextRequest) {
       }
 
       // Получаем тесты через CategoryTest
+      const testFilter: any = {};
+      if (difficulty) testFilter.difficulty = difficulty;
+      if (profession) testFilter.tags = { has: profession };
+
       const categoryTests = await prisma.categoryTest.findMany({
         where: {
           categoryId: category.id,
-          test: {
-            ...(difficulty && { difficulty }),
-            ...(profession && { tags: { has: profession } }),
-          }
+          ...(Object.keys(testFilter).length > 0 && { test: testFilter })
         },
         include: {
           test: {
@@ -62,11 +63,12 @@ export async function GET(req: NextRequest) {
     }
 
     // Если категория не указана, получаем все тесты
+    const whereFilter: any = {};
+    if (difficulty) whereFilter.difficulty = difficulty;
+    if (profession) whereFilter.tags = { has: profession };
+
     const tests = await prisma.test.findMany({
-      where: {
-        ...(difficulty && { difficulty }),
-        ...(profession && { tags: { has: profession } }),
-      },
+      where: whereFilter,
       include: {
         categories: {
           include: {

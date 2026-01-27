@@ -29,9 +29,9 @@ npx tsx scripts/create-example-collections.ts     # Создать коллек�
 npx tsx scripts/create-categories-and-requirements.ts  # Настроить категории
 
 # Шаблоны для создания контента (см. docs/)
+# - DATABASE_COMPLETE_GUIDE.md - ГЛАВНЫЙ ДОКУМЕНТ по работе с БД
 # - LECTURE_CREATION_GUIDE.md - как создавать лекции
 # - QUESTION_CREATION_GUIDE.md - как создавать вопросы и тесты
-# - MANY_TO_MANY_USAGE.md - работа с Many-to-Many связями
 ```
 
 ## Архитектура проекта
@@ -46,40 +46,67 @@ npx tsx scripts/create-categories-and-requirements.ts  # Настроить ка
 ### Структура директорий
 
 ```
-src/
-├── app/                       # Next.js App Router
-│   ├── (auth)/               # Route group: незащищенные страницы (login, register)
-│   ├── (dashboard)/          # Route group: защищенные страницы (dashboard, tests, pomodoro, results)
-│   ├── api/                  # API Routes
-│   │   ├── auth/             # NextAuth endpoints
-│   │   ├── tests/            # CRUD для тестов
-│   │   ├── results/          # Результаты тестов
-│   │   ├── pomodoro/         # Сохранение Pomodoro сессий
-│   │   └── lectures/         # Получение лекций по вопросам
-│   ├── layout.tsx            # Корневой layout с провайдерами
-│   └── page.tsx              # Landing page (/)
-├── components/
-│   ├── auth/                 # LoginForm, RegisterForm
-│   ├── layout/               # DashboardHeader с навигацией
-│   ├── pomodoro/             # PomodoroTimer, PomodoroWidget, PomodoroTitleUpdater
-│   ├── lecture/              # LectureModal для отображения теории
-│   ├── providers/            # SessionProvider, ReduxProvider
-│   └── ui/                   # Button, Input, Card
-├── store/                    # Redux Toolkit store
-│   ├── store.ts              # Конфигурация store с localStorage sync
-│   ├── pomodoroSlice.ts      # Pomodoro state (mode, timeLeft, isRunning, completedPomodoros)
-│   ├── hooks.ts              # Typed useAppDispatch, useAppSelector
-│   └── localStorage.ts       # Сохранение/загрузка Redux state в localStorage
-├── contexts/                 # PomodoroContext для синхронизации между вкладками
-├── lib/                      # Утилиты
-│   ├── prisma.ts             # Singleton Prisma Client
-│   ├── auth.ts               # NextAuth authOptions configuration
-│   ├── bcrypt.ts             # hashPassword, verifyPassword
-│   └── utils.ts              # shuffleArray, shuffleOptions (Fisher-Yates)
-├── types/
-│   ├── index.ts              # Общие типы
-│   └── next-auth.d.ts        # Расширение NextAuth типов
-└── middleware.ts             # withAuth middleware (защита /dashboard, /tests, /pomodoro, /results)
+rest-api-trainer/
+├── src/
+│   ├── app/                       # Next.js App Router
+│   │   ├── (auth)/               # Route group: незащищенные страницы (login, register)
+│   │   ├── (dashboard)/          # Route group: защищенные страницы
+│   │   │   ├── dashboard/        # Главная страница дашборда
+│   │   │   ├── tests/            # Список тестов и страница прохождения теста
+│   │   │   ├── combined-test/    # Комбинированные тесты из пользовательских списков
+│   │   │   ├── results/          # История результатов
+│   │   │   ├── pomodoro/         # Страница Pomodoro таймера
+│   │   │   ├── lectures/         # Список всех лекций
+│   │   │   └── my-lists/         # Пользовательские списки тестов
+│   │   ├── api/                  # API Routes
+│   │   │   ├── auth/             # NextAuth endpoints
+│   │   │   ├── register/         # Регистрация пользователей
+│   │   │   ├── tests/            # CRUD для тестов
+│   │   │   ├── results/          # Результаты тестов
+│   │   │   ├── combined-results/ # Результаты комбинированных тестов
+│   │   │   ├── combined-test/    # API для комбинированных тестов
+│   │   │   ├── pomodoro/         # Сохранение Pomodoro сессий
+│   │   │   ├── lectures/         # Получение лекций
+│   │   │   ├── categories/       # Получение категорий
+│   │   │   ├── user-lists/       # CRUD для пользовательских списков
+│   │   │   └── user/             # Настройки пользователя
+│   │   ├── layout.tsx            # Корневой layout с провайдерами
+│   │   ├── page.tsx              # Landing page (/)
+│   │   └── globals.css           # Глобальные стили
+│   ├── components/
+│   │   ├── auth/                 # LoginForm, RegisterForm
+│   │   ├── layout/               # DashboardHeader с навигацией
+│   │   ├── pomodoro/             # PomodoroTimer, PomodoroWidget, PomodoroTitleUpdater
+│   │   ├── lecture/              # LectureModal для отображения теории
+│   │   ├── lists/                # AddToListModal для добавления тестов в списки
+│   │   ├── providers/            # SessionProvider, ReduxProvider
+│   │   └── ui/                   # Button, Input, Card
+│   ├── store/                    # Redux Toolkit store
+│   │   ├── store.ts              # Конфигурация store с localStorage sync
+│   │   ├── pomodoroSlice.ts      # Pomodoro state (mode, timeLeft, isRunning, completedPomodoros)
+│   │   ├── userListsSlice.ts     # Пользовательские списки тестов
+│   │   ├── hooks.ts              # Typed useAppDispatch, useAppSelector
+│   │   └── localStorage.ts       # Сохранение/загрузка Redux state в localStorage
+│   ├── contexts/                 # PomodoroContext для синхронизации между вкладками
+│   ├── lib/                      # Утилиты
+│   │   ├── prisma.ts             # Singleton Prisma Client
+│   │   ├── auth.ts               # NextAuth authOptions configuration
+│   │   ├── bcrypt.ts             # hashPassword, verifyPassword
+│   │   └── utils.ts              # shuffleArray, shuffleOptions (Fisher-Yates)
+│   ├── types/
+│   │   ├── index.ts              # Общие типы
+│   │   └── next-auth.d.ts        # Расширение NextAuth типов
+│   └── middleware.ts             # withAuth middleware (защита защищенных маршрутов)
+├── prisma/
+│   ├── schema.prisma             # Prisma схема БД
+│   └── seed.ts                   # Скрипт для заполнения БД начальными данными
+├── scripts/                      # TypeScript скрипты для создания контента (40+ примеров)
+├── docs/                         # Документация проекта
+├── public/                       # Статические файлы (звуки для Pomodoro)
+├── package.json
+├── next.config.ts
+├── tsconfig.json
+└── .env                          # Environment variables (не в git)
 ```
 
 ### Ключевые архитектурные паттерны
@@ -178,13 +205,19 @@ export const config = {
 **ВАЖНО:** В проекте настроен и доступен Redux Toolkit. Можно использовать для управления глобальным состоянием где это необходимо.
 
 **Текущее использование:**
-- ⏱️ **Pomodoro таймер** - единственная часть приложения на Redux
+- ⏱️ **Pomodoro таймер** (pomodoroSlice) - управление состоянием таймера
+- 📝 **Пользовательские списки** (userListsSlice) - локальное кэширование списков тестов
 
 **Redux Store структура:**
-- **State:** mode (work/short_break/long_break), timeLeft, isRunning, completedPomodoros, endTime
-- **Actions:** startTimer, pauseTimer, tick, resetTimer, switchMode, completeTimer
-- **Persistence:** localStorage sync через middleware (src/store/localStorage.ts)
-- **Синхронизация:** PomodoroContext + BroadcastChannel для синхронизации между вкладками
+- **pomodoroSlice:**
+  - State: mode (work/short_break/long_break), timeLeft, isRunning, completedPomodoros, endTime
+  - Actions: startTimer, pauseTimer, tick, resetTimer, switchMode, completeTimer
+  - Persistence: localStorage sync через middleware
+  - Синхронизация: PomodoroContext + BroadcastChannel для синхронизации между вкладками
+- **userListsSlice:**
+  - State: lists (массив UserTestList), loading, error
+  - Actions: fetchUserLists, createList, updateList, deleteList, addTestToList, removeTestFromList
+  - API интеграция: RTK Query pattern для синхронизации с бэкендом
 
 **Где НЕ используется Redux (локальное состояние через useState):**
 - 📚 Тесты - состояние управляется через `useState` + sessionStorage
@@ -228,13 +261,21 @@ const user = await prisma.user.findUnique({
 
 ### Database Models
 
-**User** → testResults[], pomodoroSessions[]
-**Test** → results[], questions[] (через TestQuestion)
+**User** → testResults[], pomodoroSessions[], testLists[], combinedTestResults[], taskProgress[]
+**Category** → tests[] (через CategoryTest), parent, children (иерархия категорий)
+**Test** → results[], questions[] (через TestQuestion), categories[] (через CategoryTest), collections[] (через CollectionTest), userLists[] (через UserTestListItem)
 **Question** → tests[] (через TestQuestion), lecture (опционально)
 **TestQuestion** → test, question (junction table с полем order)
-**TestResult** → user, test (answers: Json, score: Int)
+**CategoryTest** → category, test (junction table с полем order для кастомной сортировки в категории)
+**Collection** → tests[] (через CollectionTest) (программы обучения для профессий)
+**CollectionTest** → collection, test (junction table с order, isRequired)
+**TestResult** → user, test (answers: Json, score: Int, mode: String)
+**CombinedTestResult** → user, testIds[] (результаты комбинированных тестов)
 **PomodoroSession** → user (duration: Int, type: String)
-**Lecture** → questions[] (title, topic, content: Text)
+**Lecture** → questions[], taskProgress[] (title, topic, content: Text)
+**UserTestList** → user, items[] (через UserTestListItem) (пользовательские списки тестов)
+**UserTestListItem** → list, test (junction table с order)
+**LectureTaskProgress** → user, lecture (прогресс выполнения задач в лекции)
 
 ### CSS Modules Pattern
 - Каждый компонент имеет `.module.scss` файл
@@ -249,11 +290,19 @@ NEXTAUTH_URL="http://localhost:3000"
 ```
 
 ### Документация проекта
+
+**🗄️ База данных:**
+- **docs/DATABASE_COMPLETE_GUIDE.md** - **👈 ГЛАВНЫЙ ДОКУМЕНТ** - единая точка входа для работы с БД (мастер-файл для разработчиков и ИИ)
+- **docs/DATABASE_ANALYSIS.md** - детальный анализ структуры БД и оценка
+- **docs/DB_IMPROVEMENTS_REPORT.md** - отчет об оптимизациях и улучшениях
+- **docs/MANY_TO_MANY_USAGE.md** - архитектура Many-to-Many связей и примеры запросов
+- **docs/DB_WORKFLOW_GUIDE.md** - детальные CRUD шаблоны и workflow
+
+**📚 Создание контента:**
 - **README.md** - описание платформы, быстрый старт, структура контента
-- **docs/LECTURE_CREATION_GUIDE.md** - правила создания лекций (302 строки)
-- **docs/QUESTION_CREATION_GUIDE.md** - правила создания вопросов и тестов (330 строк)
-- **docs/MANY_TO_MANY_USAGE.md** - архитектура БД и примеры запросов (457 строк)
-- **scripts/** - 40 рабочих скриптов-шаблонов для создания контента
+- **docs/LECTURE_CREATION_GUIDE.md** - правила создания лекций
+- **docs/QUESTION_CREATION_GUIDE.md** - правила создания вопросов и тестов
+- **scripts/** - 40+ рабочих TypeScript скриптов-шаблонов для создания контента
 
 ## Важные паттерны при работе с кодом
 
@@ -265,6 +314,7 @@ NEXTAUTH_URL="http://localhost:3000"
 ### При добавлении новых вопросов и лекций
 
 **Обязательно следовать документации:**
+- `docs/DATABASE_COMPLETE_GUIDE.md` - **ГЛАВНЫЙ ДОКУМЕНТ** по работе с БД
 - `docs/QUESTION_CREATION_GUIDE.md` - полное руководство по созданию вопросов
 - `docs/LECTURE_CREATION_GUIDE.md` - полное руководство по созданию лекций
 - `docs/LECTURE_CHECKLIST.md` - чек-лист качества лекции перед созданием
@@ -436,3 +486,49 @@ npm run seed            # Заполнить БД тестами
 ```
 
 Если БД пустая, seed скрипт создаст 18 тестов + все вопросы + TestQuestion связи.
+
+## Особенности реализации
+
+### Пользовательские списки тестов (User Test Lists)
+- Пользователи могут создавать собственные коллекции тестов
+- Модели: `UserTestList` → `UserTestListItem` → `Test`
+- Страница: `/my-lists` - управление списками
+- Компонент: `AddToListModal` - добавление тестов в списки
+- API: `/api/user-lists` - CRUD операции
+- Связь с комбинированными тестами: `/combined-test?listId=...`
+
+### Система категорий с иерархией
+- Модель `Category` поддерживает иерархическую структуру (parent/children)
+- Junction table `CategoryTest` позволяет одному тесту быть в нескольких категориях
+- Кастомный порядок (order) для каждой категории независимо
+- API: `/api/categories` - получение категорий с тестами
+
+### Прогресс выполнения задач в лекциях
+- Модель `LectureTaskProgress` отслеживает выполнение задач пользователем
+- API: `/api/lectures/[id]/tasks-progress` - CRUD для прогресса
+- User setting: `skipTasksWarning` - пропуск предупреждения о невыполненных задачах
+
+### Два типа результатов тестов
+1. **TestResult** - результаты обычных тестов (mode: 'learning' | 'exam')
+2. **CombinedTestResult** - результаты комбинированных тестов из пользовательских списков
+   - testIds: String[] - массив ID тестов
+   - testScores: Json - детализация по каждому тесту
+
+### TypeScript конфигурация
+- Path alias: `@/*` → `./src/*`
+- Target: ES2017
+- JSX: react-jsx (автоматический импорт React)
+- Strict mode: enabled
+
+### Работа со скриптами
+- Все скрипты используют `tsx` для запуска TypeScript
+- Шаблон подключения к БД через Prisma Adapter:
+  ```typescript
+  import { PrismaPg } from '@prisma/adapter-pg';
+  import { Pool } from 'pg';
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const adapter = new PrismaPg(pool);
+  const prisma = new PrismaClient({ adapter });
+  ```
+- Всегда использовать `dotenv.config()` с правильным путем к `.env`
+- Проверять на дублирование перед созданием новых записей

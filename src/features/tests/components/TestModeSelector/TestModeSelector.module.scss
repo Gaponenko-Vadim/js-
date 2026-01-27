@@ -1,0 +1,161 @@
+@use 'sass:color';
+@use '@/styles/tokens.scss' as *;
+@use '@/styles/utilities.scss' as *;
+
+.container {
+  @include flex-center;
+  min-height: 100vh;
+  background: $color-background;
+  padding: $spacing-lg;
+}
+
+.content {
+  @include flex-column;
+  align-items: center;
+  gap: $spacing-xl;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.title {
+  font-size: $font-size-3xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  text-align: center;
+  margin: 0;
+
+  @include mobile {
+    font-size: $font-size-2xl;
+  }
+}
+
+.testTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  text-align: center;
+  margin: 0;
+}
+
+.testDescription {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  text-align: center;
+  line-height: $line-height-relaxed;
+  max-width: 600px;
+  margin: 0;
+}
+
+.modeCards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-xl;
+  width: 100%;
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.modeCard {
+  @include flex-column;
+  align-items: center;
+  gap: $spacing-lg;
+  padding: $spacing-xl;
+  background: white;
+  border: 3px solid $color-border;
+  border-radius: $border-radius-2xl;
+  transition: $transition-all;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-xl;
+  }
+}
+
+.modeIcon {
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.modeTitle {
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin: 0;
+  text-align: center;
+
+  @include mobile {
+    font-size: $font-size-xl;
+  }
+}
+
+.modeFeatures {
+  @include flex-column;
+  gap: $spacing-md;
+  width: 100%;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.featurePositive {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: $line-height-relaxed;
+}
+
+.featureNegative {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  line-height: $line-height-relaxed;
+}
+
+.learningButton {
+  @include button-base;
+  width: 100%;
+  background: linear-gradient(135deg, $color-info 0%, color.adjust($color-info, $lightness: -10%) 100%);
+  color: white;
+  font-size: $font-size-lg;
+  padding: $spacing-md $spacing-xl;
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, color.adjust($color-info, $lightness: -10%) 0%, color.adjust($color-info, $lightness: -20%) 100%);
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
+  }
+}
+
+.examButton {
+  @include button-base;
+  width: 100%;
+  background: $color-primary-gradient;
+  color: white;
+  font-size: $font-size-lg;
+  padding: $spacing-md $spacing-xl;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
+  }
+}
+
+.backButton {
+  padding: $spacing-sm $spacing-lg;
+  background: transparent;
+  border: 1px solid $color-border;
+  border-radius: $border-radius-md;
+  color: $color-text-secondary;
+  font-size: $font-size-base;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: $transition-all;
+
+  &:hover {
+    background: $color-background-hover;
+    border-color: $color-primary;
+    color: $color-primary;
+    transform: translateX(-4px);
+  }
+}

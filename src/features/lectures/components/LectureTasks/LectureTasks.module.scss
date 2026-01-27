@@ -1,0 +1,217 @@
+/* Tasks Wrapper */
+.tasksWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tasksHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tasksHeaderTitle {
+  margin: 0;
+  font-size: 20px;
+  color: #fff;
+}
+
+.tasksPrepButton {
+  background: rgba(102, 126, 234, 0.18);
+  border: 1px solid rgba(102, 126, 234, 0.5);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: rgba(102, 126, 234, 0.3);
+    border-color: rgba(102, 126, 234, 0.7);
+  }
+}
+
+.tasksIntro {
+  color: #e0e0e0;
+}
+
+.tasksList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Task Card */
+.taskCard {
+  position: relative;
+  border-radius: 14px;
+  padding: 18px 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 14px;
+    bottom: 14px;
+    width: 4px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #667eea 0%, #a855f7 100%);
+  }
+}
+
+.taskCardCompleted::before {
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+  background-size: 100% 180%;
+  animation: taskGlow 2.2s ease-in-out infinite;
+}
+
+@keyframes taskGlow {
+  0% {
+    background-position: 0% 0%;
+    opacity: 0.7;
+  }
+  50% {
+    background-position: 0% 100%;
+    opacity: 1;
+  }
+  100% {
+    background-position: 0% 0%;
+    opacity: 0.8;
+  }
+}
+
+.taskHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.taskTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.taskTitle {
+  margin: 0;
+  font-size: 20px;
+  color: #fff;
+}
+
+.taskActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.taskDoneBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.taskAnswerButton {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: rgba(102, 126, 234, 0.2);
+    border-color: rgba(102, 126, 234, 0.5);
+  }
+}
+
+.taskBody {
+  padding-left: 8px;
+  color: #d9d9e6;
+
+  code {
+    background: rgba(102, 126, 234, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    color: #ff79c6;
+  }
+
+  pre {
+    background: #0d1117;
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 16px 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    code {
+      background: none;
+      padding: 0;
+      color: #e0e0e0;
+      font-size: 13px;
+    }
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tasksWrapper {
+    gap: 16px;
+  }
+
+  .tasksHeaderRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tasksPrepButton {
+    width: 100%;
+  }
+
+  .taskCard {
+    padding: 16px;
+  }
+
+  .taskHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .taskActions {
+    width: 100%;
+
+    button {
+      flex: 1;
+    }
+  }
+
+  .taskTitle {
+    font-size: 18px;
+  }
+}

@@ -1,0 +1,52 @@
+@use '@/styles/tokens.scss' as *;
+@use '@/styles/utilities.scss' as *;
+
+.navigation {
+  @include flex-between;
+  gap: $spacing-md;
+  width: 100%;
+  padding-top: $spacing-lg;
+
+  @include mobile {
+    flex-direction: column;
+  }
+}
+
+.primaryButton {
+  @include button-base;
+  @include button-variant($color-primary, $color-primary-dark, white);
+  @include hover-lift;
+  flex: 1;
+  max-width: 200px;
+
+  @include mobile {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  &:disabled {
+    opacity: $opacity-disabled;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.secondaryButton {
+  @include button-base;
+  @include button-variant($color-gray-200, $color-gray-300, $color-text-primary);
+  @include hover-lift;
+  flex: 1;
+  max-width: 200px;
+
+  @include mobile {
+    max-width: 100%;
+    width: 100%;
+    order: 2;
+  }
+
+  &:disabled {
+    opacity: $opacity-disabled;
+    cursor: not-allowed;
+    transform: none;
+  }
+}

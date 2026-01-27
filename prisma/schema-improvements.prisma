@@ -1,0 +1,385 @@
+// ============================================================
+// УЛУЧШЕННАЯ ВЕРСИЯ SCHEMA.PRISMA
+// ============================================================
+// Этот файл содержит предлагаемые улучшения для текущей схемы
+// НЕ ЗАМЕНЯТЬ schema.prisma напрямую!
+// Использовать как reference для постепенных миграций
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// ENUMS (новые)
+// ============================================================
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum TestMode {
+  LEARNING
+  EXAM
+}
+
+enum CollectionType {
+  PROFESSION
+  LEARNING_PATH
+  CUSTOM
+}
+
+enum PomodoroType {
+  WORK
+  SHORT_BREAK
+  LONG_BREAK
+}
+
+// ============================================================
+// CORE MODELS
+// ============================================================
+
+model User {
+  id                     String                  @id @default(cuid())
+  email                  String                  @unique
+  password               String
+  name                   String?
+  skipTasksWarning       Boolean                 @default(false)
+
+  // Soft delete
+  deletedAt              DateTime?
+
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+
+  testResults            TestResult[]
+  pomodoroSessions       PomodoroSession[]
+  testLists              UserTestList[]
+  combinedTestResults    CombinedTestResult[]
+  taskProgress           LectureTaskProgress[]
+
+  @@index([email])
+  @@index([deletedAt])
+}
+
+model Category {
+  id          String         @id @default(cuid())
+  name        String         @unique
+  slug        String         @unique
+  description String
+  icon        String
+  order       Int            @default(0)
+
+  // Иерархия категорий
+  parentId    String?
+  parent      Category?      @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[]     @relation("CategoryHierarchy")
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  tests       CategoryTest[]
+
+  @@index([slug])
+  @@index([parentId])
+  @@index([order])  // НОВЫЙ индекс
+}
+
+model Test {
+  id          String         @id @default(cuid())
+  title       String
+  description String
+  difficulty  Difficulty     // ИЗМЕНЕНО: был String, стал enum
+
+  tags        String[]       @default([])
+
+  // УДАЛЕНО: categoryId поле (миграция завершена)
+  // categoryId  String?     @map("category_id")
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  categories  CategoryTest[]
+  collections CollectionTest[]
+  questions   TestQuestion[]
+  results     TestResult[]
+  userLists   UserTestListItem[]
+
+  // УДАЛЕНО: @@index([categoryId])
+  @@index([difficulty])
+  @@index([tags], type: Gin)  // НОВЫЙ GIN индекс для array
+  @@index([title])            // НОВЫЙ индекс для поиска
+}
+
+model Question {
+  id            String         @id @default(cuid())
+  question      String
+  options       Json           // Array<string>: ["Option 1", "Option 2", ...]
+  correctAnswer Int
+  explanation   String
+
+  lectureId     String?
+  lecture       Lecture?       @relation(fields: [lectureId], references: [id], onDelete: SetNull)
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt  // НОВОЕ поле
+
+  tests         TestQuestion[]
+
+  @@index([lectureId])  // НОВЫЙ индекс
+}
+
+model TestQuestion {
+  id         String   @id @default(cuid())
+  testId     String
+  questionId String
+  order      Int
+
+  test       Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([testId, questionId])
+  @@index([testId, order])
+}
+
+model TestResult {
+  id          String   @id @default(cuid())
+  userId      String
+  testId      String
+  answers     Json     // Array<number>: [0, 2, 1, ...] индексы выбранных ответов
+  score       Int
+
+  mode        TestMode @default(EXAM)  // НОВОЕ поле
+
+  // Soft delete
+  deletedAt   DateTime?  // НОВОЕ поле
+
+  completedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt  // НОВОЕ поле
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test        Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@index([userId])                    // НОВЫЙ индекс
+  @@index([testId])                    // НОВЫЙ индекс
+  @@index([userId, completedAt])       // НОВЫЙ композитный индекс
+  @@index([testId, score])             // НОВЫЙ композитный индекс
+  @@index([userId, mode])              // НОВЫЙ индекс для фильтрации по режиму
+  @@index([deletedAt])                 // НОВЫЙ индекс для soft delete
+}
+
+model PomodoroSession {
+  id          String       @id @default(cuid())
+  userId      String
+  duration    Int
+  type        PomodoroType // ИЗМЕНЕНО: был String, стал enum
+
+  createdAt   DateTime     @default(now())  // НОВОЕ поле
+  updatedAt   DateTime     @updatedAt       // НОВОЕ поле
+  completedAt DateTime     @default(now())
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])                // НОВЫЙ индекс
+  @@index([userId, completedAt])   // НОВЫЙ композитный индекс
+  @@index([type])                  // НОВЫЙ индекс
+}
+
+model CombinedTestResult {
+  id            String   @id @default(cuid())
+  userId        String
+
+  listName      String
+  testIds       String[] // ПРИМЕЧАНИЕ: Рассмотреть junction table для FK integrity
+
+  totalScore    Int
+  totalQuestions Int
+  correctAnswers Int
+
+  testScores    Json     // { [testId]: { score: number, correct: number, total: number, title: string } }
+
+  completedAt   DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([completedAt])
+  @@map("combined_test_results")
+}
+
+model Lecture {
+  id               String     @id @default(cuid())
+  title            String
+  topic            String     @unique  // ИЗМЕНЕНО: добавлен @unique constraint
+  content          String     @db.Text
+
+  scenariosContent String?    @db.Text
+  exampleContent   String?    @db.Text
+  tasksContent     String?    @db.Text
+
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  questions        Question[]
+  taskProgress     LectureTaskProgress[]
+}
+
+model LectureTaskProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  lectureId   String
+  taskId      String   // ПРИМЕЧАНИЕ: Документировать формат taskId
+
+  completedAt DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lecture     Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lectureId, taskId])
+  @@index([userId])
+  @@index([lectureId])
+}
+
+// ============================================================
+// JUNCTION TABLES (Many-to-Many)
+// ============================================================
+
+model CategoryTest {
+  id         String   @id @default(cuid())
+  categoryId String
+  testId     String
+  order      Int      @default(0)
+
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  test       Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+
+  @@unique([categoryId, testId])
+  @@index([categoryId, order])
+  @@map("category_tests")
+}
+
+model Collection {
+  id             String         @id @default(cuid())
+  name           String         @unique
+  slug           String         @unique
+  description    String
+  icon           String
+
+  type           CollectionType @default(CUSTOM)  // ИЗМЕНЕНО: был String, стал enum
+  targetRole     String?
+  estimatedHours Int?
+  level          Difficulty?    // ИЗМЕНЕНО: был String?, стал Difficulty?
+
+  order          Int            @default(0)
+  isPublished    Boolean        @default(true)
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  tests          CollectionTest[]
+
+  @@index([slug])
+  @@index([type])
+  @@index([targetRole])
+  @@index([isPublished])  // НОВЫЙ partial index (в SQL)
+}
+
+model CollectionTest {
+  id           String     @id @default(cuid())
+  collectionId String
+  testId       String
+  order        Int        @default(0)
+  isRequired   Boolean    @default(true)
+
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  test         Test       @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime   @default(now())
+
+  @@unique([collectionId, testId])
+  @@index([collectionId, order])
+  @@map("collection_tests")
+}
+
+// ============================================================
+// USER TEST LISTS
+// ============================================================
+
+model UserTestList {
+  id          String             @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  icon        String             @default("📋")
+  color       String             @default("#667eea")
+  isPublic    Boolean            @default(false)
+
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       UserTestListItem[]
+
+  @@index([userId])
+  @@index([isPublic])  // НОВЫЙ partial index (в SQL)
+  @@map("user_test_lists")
+}
+
+model UserTestListItem {
+  id         String       @id @default(cuid())
+  listId     String
+  testId     String
+  order      Int          @default(0)
+
+  list       UserTestList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  test       Test         @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  addedAt    DateTime     @default(now())
+
+  @@unique([listId, testId])
+  @@index([listId, order])
+  @@map("user_test_list_items")
+}
+
+// ============================================================
+// МИГРАЦИЯ: Шаги для перехода от текущей схемы
+// ============================================================
+
+/*
+1. Создать ENUM типы:
+   - CREATE TYPE "Difficulty" AS ENUM ('BEGINNER', 'INTERMEDIATE', 'ADVANCED');
+   - CREATE TYPE "TestMode" AS ENUM ('LEARNING', 'EXAM');
+   - CREATE TYPE "CollectionType" AS ENUM ('PROFESSION', 'LEARNING_PATH', 'CUSTOM');
+   - CREATE TYPE "PomodoroType" AS ENUM ('WORK', 'SHORT_BREAK', 'LONG_BREAK');
+
+2. Мигрировать данные:
+   - UPDATE "Test" SET difficulty = 'BEGINNER' WHERE difficulty ILIKE 'beginner';
+   - UPDATE "Test" SET difficulty = 'INTERMEDIATE' WHERE difficulty ILIKE 'intermediate';
+   - UPDATE "Test" SET difficulty = 'ADVANCED' WHERE difficulty ILIKE 'advanced';
+
+3. Изменить типы колонок:
+   - ALTER TABLE "Test" ALTER COLUMN difficulty TYPE "Difficulty" USING difficulty::"Difficulty";
+
+4. Добавить новые поля:
+   - ALTER TABLE "TestResult" ADD COLUMN mode "TestMode" DEFAULT 'EXAM';
+   - ALTER TABLE "Question" ADD COLUMN "updatedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP;
+
+5. Добавить индексы (см. database-improvements.sql)
+
+6. Удалить deprecated поле:
+   - ALTER TABLE "Test" DROP COLUMN category_id;
+
+7. Применить unique constraint:
+   - ALTER TABLE "Lecture" ADD CONSTRAINT "Lecture_topic_key" UNIQUE (topic);
+
+8. Обновить Prisma Client:
+   - npx prisma generate
+*/

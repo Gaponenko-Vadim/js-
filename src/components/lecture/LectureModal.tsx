@@ -1,21 +1,19 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import styles from './LectureModal.module.scss';
-
-interface Lecture {
-  id: string;
-  title: string;
-  topic: string;
-  content: string;
-  scenariosContent?: string | null;
-  exampleContent?: string | null;
-  tasksContent?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import {
+  LectureContent,
+  LectureTabs,
+  LectureTasks,
+  TaskModals,
+  parseTasksContent,
+  useGetLectureByIdQuery,
+  useGetLectureByQuestionIdQuery,
+  type Lecture,
+  type LectureTab,
+  type TaskItem
+} from '@/features/lectures';
 
 interface LectureModalProps {
   questionId?: string;
@@ -24,139 +22,34 @@ interface LectureModalProps {
   onClose: () => void;
 }
 
-type LectureTab = 'lecture' | 'scenarios' | 'example' | 'tasks';
-
-interface TaskItem {
-  id: string;
-  title: string;
-  summary: string;
-  body: string;
-  answer: string;
-  explanation: string;
-}
-
-interface ParsedTasks {
-  intro: string;
-  items: TaskItem[];
-}
-
-function parseTasksContent(content: string): ParsedTasks {
-  const headingMatches = Array.from(content.matchAll(/^###\s+(.+)$/gm));
-  if (headingMatches.length === 0) {
-    return { intro: content.trim(), items: [] };
-  }
-
-  const summaryMarkers = ['**Кратко:**', '**Краткое описание:**', '**Коротко:**'];
-  const detailsMarkers = ['**Полное задание:**', '**Полное описание:**', '**Подробно:**', '**Описание:**'];
-
-  const findMarker = (text: string, markers: string[]) => {
-    for (const marker of markers) {
-      const index = text.indexOf(marker);
-      if (index >= 0) {
-        return { marker, index };
-      }
-    }
-    return null;
-  };
-
-  const intro = content.slice(0, headingMatches[0].index ?? 0).trim();
-  const items: TaskItem[] = [];
-
-  for (let i = 0; i < headingMatches.length; i++) {
-    const match = headingMatches[i];
-    const title = match[1]?.trim() ?? `Задание ${i + 1}`;
-    const start = (match.index ?? 0) + match[0].length;
-    const end = i + 1 < headingMatches.length ? headingMatches[i + 1].index ?? content.length : content.length;
-    const block = content.slice(start, end).trim();
-
-    const answerMarker = '**Ответ:**';
-    const explanationMarker = '**Объяснение:**';
-    let body = block;
-    let answer = '';
-    let explanation = '';
-    let summary = '';
-
-    const answerIndex = block.indexOf(answerMarker);
-    if (answerIndex >= 0) {
-      body = block.slice(0, answerIndex).trim();
-      const afterAnswer = block.slice(answerIndex + answerMarker.length).trim();
-      const explanationIndex = afterAnswer.indexOf(explanationMarker);
-      if (explanationIndex >= 0) {
-        answer = afterAnswer.slice(0, explanationIndex).trim();
-        explanation = afterAnswer.slice(explanationIndex + explanationMarker.length).trim();
-      } else {
-        answer = afterAnswer.trim();
-      }
-    }
-
-    const summaryMatch = findMarker(body, summaryMarkers);
-    const detailsMatch = findMarker(body, detailsMarkers);
-
-    if (summaryMatch && detailsMatch && summaryMatch.index < detailsMatch.index) {
-      summary = body.slice(summaryMatch.index + summaryMatch.marker.length, detailsMatch.index).trim();
-      body = body.slice(detailsMatch.index + detailsMatch.marker.length).trim();
-    }
-
-    items.push({
-      id: `task-${i + 1}`,
-      title,
-      summary,
-      body,
-      answer,
-      explanation
-    });
-  }
-
-  return { intro, items };
-}
-
 export default function LectureModal({ questionId, lectureId, isOpen, onClose }: LectureModalProps) {
-  const [lecture, setLecture] = useState<Lecture | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // RTK Query hooks - используем оба, но активируем только нужный через skip
+  const { data: lectureByQuestion, isLoading: loadingByQuestion, error: errorByQuestion } = useGetLectureByQuestionIdQuery(
+    questionId || '',
+    { skip: !questionId || !isOpen }
+  );
+  const { data: lectureById, isLoading: loadingById, error: errorById } = useGetLectureByIdQuery(
+    lectureId || '',
+    { skip: !lectureId || !isOpen || !!questionId } // Если questionId есть, не запрашиваем по lectureId
+  );
+
+  // Определяем какие данные использовать
+  const lecture = questionId ? lectureByQuestion : lectureById;
+  const loading = questionId ? loadingByQuestion : loadingById;
+  const error = questionId ? errorByQuestion : errorById;
+
   const [activeTab, setActiveTab] = useState<LectureTab>('lecture');
   const [skipTasksWarning, setSkipTasksWarning] = useState(false);
   const [warningOptOut, setWarningOptOut] = useState(false);
   const [showTaskWarning, setShowTaskWarning] = useState(false);
   const [showTaskDetails, setShowTaskDetails] = useState(false);
   const [showTaskAnswer, setShowTaskAnswer] = useState(false);
+  const [showTasksPrep, setShowTasksPrep] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
   const [taskProgress, setTaskProgress] = useState<Record<string, boolean>>({});
   const taskProgressVersionRef = useRef(0);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    if (!questionId && !lectureId) return;
-
-    const fetchLecture = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        let url = '';
-        if (questionId) {
-          url = `/api/lectures/by-question/${questionId}`;
-        } else if (lectureId) {
-          url = `/api/lectures/${lectureId}`;
-        }
-
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error('Не удалось загрузить лекцию');
-        }
-
-        const data = await response.json();
-        setLecture(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Произошла ошибка');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLecture();
-  }, [isOpen, questionId, lectureId]);
-
+  // Reset state when lecture changes
   useEffect(() => {
     if (lecture) {
       setActiveTab('lecture');
@@ -165,6 +58,7 @@ export default function LectureModal({ questionId, lectureId, isOpen, onClose }:
     }
   }, [lecture?.id]);
 
+  // Fetch user settings
   useEffect(() => {
     if (!isOpen) return;
 
@@ -184,6 +78,7 @@ export default function LectureModal({ questionId, lectureId, isOpen, onClose }:
     fetchSettings();
   }, [isOpen]);
 
+  // Fetch task progress
   useEffect(() => {
     if (!isOpen || !lecture?.id || !lecture?.tasksContent?.trim()) return;
 
@@ -214,6 +109,7 @@ export default function LectureModal({ questionId, lectureId, isOpen, onClose }:
   const hasScenarios = Boolean(lecture?.scenariosContent?.trim());
   const hasExample = Boolean(lecture?.exampleContent?.trim());
   const hasTasks = Boolean(lecture?.tasksContent?.trim());
+
   const markdownToRender = (() => {
     if (activeTab === 'scenarios' && hasScenarios) {
       return lecture?.scenariosContent || '';
@@ -226,7 +122,13 @@ export default function LectureModal({ questionId, lectureId, isOpen, onClose }:
     }
     return lecture?.content || '';
   })();
+
   const parsedTasks = hasTasks && lecture?.tasksContent ? parseTasksContent(lecture.tasksContent) : null;
+  const prepContent = parsedTasks?.prep?.trim()
+    ? parsedTasks.prep
+    : 'Инструкция для подготовки пока не добавлена для этой лекции.';
+
+  const completedTaskIds = Object.keys(taskProgress).filter((taskId) => taskProgress[taskId]);
 
   const updateSkipTasksWarning = async (value: boolean) => {
     setSkipTasksWarning(value);
@@ -239,37 +141,6 @@ export default function LectureModal({ questionId, lectureId, isOpen, onClose }:
     } catch {
       // Silent fallback: preference won't persist on error.
     }
-  };
-
-  const getTaskPreview = (task: TaskItem) => {
-    if (task.summary) {
-      return task.summary;
-    }
-
-    const lines = task.body.split('\n');
-    const previewLines: string[] = [];
-    const pickLine = (label: string) => {
-      const match = lines.find((line) =>
-        line.replace(/^>\s*/, '').trim().startsWith(label)
-      );
-      if (match) {
-        previewLines.push(match.replace(/^>\s*/, '').trim());
-      }
-    };
-
-    pickLine('**Ситуация:**');
-    pickLine('**Что сделать:**');
-    pickLine('**Критерий:**');
-    pickLine('Ситуация:');
-    pickLine('Что сделать:');
-    pickLine('Критерий:');
-
-    if (previewLines.length > 0) {
-      return previewLines.join('\n');
-    }
-
-    const [firstParagraph] = task.body.split(/\n\s*\n/);
-    return firstParagraph?.trim() || task.body;
   };
 
   const handleAnswerClick = (task: TaskItem) => {
@@ -338,46 +209,13 @@ export default function LectureModal({ questionId, lectureId, isOpen, onClose }:
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        {(hasScenarios || hasExample || hasTasks) && (
-          <div className={styles.tabsBar}>
-            <div className={styles.tabs}>
-              <button
-                className={`${styles.tabButton} ${activeTab === 'lecture' ? styles.activeTab : ''}`}
-                onClick={() => setActiveTab('lecture')}
-                type="button"
-              >
-                Лекция
-              </button>
-              {hasScenarios && (
-                <button
-                  className={`${styles.tabButton} ${activeTab === 'scenarios' ? styles.activeTab : ''}`}
-                  onClick={() => setActiveTab('scenarios')}
-                  type="button"
-                >
-                  Сценарии
-                </button>
-              )}
-              {hasExample && (
-                <button
-                  className={`${styles.tabButton} ${activeTab === 'example' ? styles.activeTab : ''}`}
-                  onClick={() => setActiveTab('example')}
-                  type="button"
-                >
-                  Пример
-                </button>
-              )}
-              {hasTasks && (
-                <button
-                  className={`${styles.tabButton} ${activeTab === 'tasks' ? styles.activeTab : ''}`}
-                  onClick={() => setActiveTab('tasks')}
-                  type="button"
-                >
-                  Задания
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+        <LectureTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          hasScenarios={hasScenarios}
+          hasExample={hasExample}
+          hasTasks={hasTasks}
+        />
 
         <div className={styles.main}>
           <div className={styles.header}>
@@ -388,212 +226,54 @@ export default function LectureModal({ questionId, lectureId, isOpen, onClose }:
           </div>
 
           <div className={styles.content}>
-          {loading && (
-            <div className={styles.loading}>
-              <div className={styles.spinner}></div>
-              <p>Загрузка лекции...</p>
-            </div>
-          )}
+            {loading && (
+              <div className={styles.loading}>
+                <div className={styles.spinner}></div>
+                <p>Загрузка лекции...</p>
+              </div>
+            )}
 
-          {error && (
-            <div className={styles.error}>
-              <p>❌ {error}</p>
-            </div>
-          )}
+            {error && (
+              <div className={styles.error}>
+                <p>❌ Не удалось загрузить лекцию</p>
+              </div>
+            )}
 
             {lecture && !loading && (
               activeTab === 'tasks' && hasTasks && parsedTasks ? (
-                <div className={styles.tasksWrapper}>
-                  {parsedTasks.intro && (
-                    <div className={styles.tasksIntro}>
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {parsedTasks.intro}
-                      </ReactMarkdown>
-                    </div>
-                  )}
-                  <div className={styles.tasksList}>
-                    {parsedTasks.items.map((task) => (
-                      <div
-                        key={task.id}
-                        className={`${styles.taskCard} ${taskProgress[task.id] ? styles.taskCardCompleted : ''}`}
-                      >
-                        <div className={styles.taskHeader}>
-                          <div className={styles.taskTitleRow}>
-                            <h3 className={styles.taskTitle}>{task.title}</h3>
-                            {taskProgress[task.id] && (
-                              <span className={styles.taskDoneBadge} aria-label="Выполнено">
-                                ✓
-                              </span>
-                            )}
-                          </div>
-                          <div className={styles.taskActions}>
-                            <button
-                              className={styles.taskAnswerButton}
-                              type="button"
-                              onClick={() => handleTaskDetailsClick(task)}
-                            >
-                              Задание
-                            </button>
-                            <button
-                              className={styles.taskAnswerButton}
-                              type="button"
-                              onClick={() => handleAnswerClick(task)}
-                            >
-                              Ответ
-                            </button>
-                          </div>
-                        </div>
-                        <div className={styles.taskBody}>
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {getTaskPreview(task)}
-                          </ReactMarkdown>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <LectureTasks
+                  tasksContent={lecture.tasksContent || ''}
+                  completedTasks={completedTaskIds}
+                  onTaskDetailsClick={handleTaskDetailsClick}
+                  onTaskAnswerClick={handleAnswerClick}
+                  onPrepClick={() => setShowTasksPrep(true)}
+                />
               ) : (
-                <div className={styles.markdown}>
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {markdownToRender}
-                  </ReactMarkdown>
-                </div>
+                <LectureContent content={markdownToRender} />
               )
             )}
           </div>
         </div>
       </div>
 
-      {showTaskWarning && selectedTask && (
-        <div className={styles.taskOverlay} onClick={() => setShowTaskWarning(false)}>
-          <div className={styles.taskModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.taskModalHeader}>
-              <h3>Перед просмотром ответа</h3>
-              <button
-                className={styles.taskModalClose}
-                onClick={() => setShowTaskWarning(false)}
-                aria-label="Закрыть"
-                type="button"
-              >
-                ✕
-              </button>
-            </div>
-            <div className={styles.taskModalBody}>
-              <p>
-                Вы уже попытались решить задание самостоятельно?
-                Если нет, не рекомендуем сразу смотреть ответ — практика запоминается
-                сильнее, чем чтение готового решения.
-              </p>
-              <label className={styles.taskCheckbox}>
-                <input
-                  type="checkbox"
-                  checked={warningOptOut}
-                  onChange={(event) => setWarningOptOut(event.target.checked)}
-                />
-                Больше не показывать это предупреждение
-              </label>
-            </div>
-            <div className={styles.taskModalActions}>
-              <button
-                className={styles.taskModalSecondary}
-                onClick={() => setShowTaskWarning(false)}
-                type="button"
-              >
-                Отмена
-              </button>
-              <button
-                className={styles.taskModalPrimary}
-                onClick={handleConfirmWarning}
-                type="button"
-              >
-                Показать ответ
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showTaskDetails && selectedTask && (
-        <div className={styles.taskOverlay} onClick={handleCloseTaskDetails}>
-          <div className={styles.taskModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.taskModalHeader}>
-              <h3>{selectedTask.title}</h3>
-              <button
-                className={styles.taskModalClose}
-                onClick={handleCloseTaskDetails}
-                aria-label="Закрыть"
-                type="button"
-              >
-                ✕
-              </button>
-            </div>
-            <div className={styles.taskModalBody}>
-              <div className={styles.taskAnswerSection}>
-                <h4>Задание</h4>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {selectedTask.body || 'Описание задания ещё не добавлено.'}
-                </ReactMarkdown>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showTaskAnswer && selectedTask && (
-        <div className={styles.taskOverlay} onClick={handleCloseTaskAnswer}>
-          <div className={styles.taskModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.taskModalHeader}>
-              <h3>{selectedTask.title}</h3>
-              <button
-                className={styles.taskModalClose}
-                onClick={handleCloseTaskAnswer}
-                aria-label="Закрыть"
-                type="button"
-              >
-                ✕
-              </button>
-            </div>
-            <div className={styles.taskModalBody}>
-              <div className={styles.taskAnswerSection}>
-                <h4>Ответ</h4>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {selectedTask.answer || 'Ответ ещё не добавлен.'}
-                </ReactMarkdown>
-              </div>
-              <div className={styles.taskAnswerSection}>
-                <h4>Объяснение</h4>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {selectedTask.explanation || 'Объяснение ещё не добавлено.'}
-                </ReactMarkdown>
-              </div>
-              <label className={styles.taskCheckbox}>
-                <input
-                  type="checkbox"
-                  checked={!skipTasksWarning}
-                  onChange={(event) => updateSkipTasksWarning(!event.target.checked)}
-                />
-                Показывать предупреждение перед ответом
-              </label>
-            </div>
-            <div className={styles.taskModalActions}>
-              <button
-                className={styles.taskAnswerActionButton}
-                type="button"
-                onClick={() => handleTaskAnswerAction(false)}
-              >
-                ❌ Нужно доработать
-              </button>
-              <button
-                className={styles.taskAnswerActionButton}
-                type="button"
-                onClick={() => handleTaskAnswerAction(true)}
-              >
-                ✅ Сделал правильно
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <TaskModals
+        selectedTask={selectedTask}
+        showTaskWarning={showTaskWarning}
+        showTaskDetails={showTaskDetails}
+        showTaskAnswer={showTaskAnswer}
+        showTasksPrep={showTasksPrep}
+        warningOptOut={warningOptOut}
+        skipTasksWarning={skipTasksWarning}
+        prepContent={prepContent}
+        onWarningOptOutChange={setWarningOptOut}
+        onConfirmWarning={handleConfirmWarning}
+        onCloseTaskWarning={() => setShowTaskWarning(false)}
+        onCloseTaskDetails={handleCloseTaskDetails}
+        onCloseTaskAnswer={handleCloseTaskAnswer}
+        onCloseTasksPrep={() => setShowTasksPrep(false)}
+        onTaskAnswerAction={handleTaskAnswerAction}
+        onSkipTasksWarningChange={updateSkipTasksWarning}
+      />
     </div>
   );
 }

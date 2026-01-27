@@ -1,0 +1,1 @@
+export { LectureContent } from './LectureContent';

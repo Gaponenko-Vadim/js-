@@ -8,62 +8,65 @@
 - Подключение: `DATABASE_URL` в `.env`
 - Визуально: `npx prisma studio`
 
-## Снимок структуры БД (по факту базы)
+## Актуальная архитектура БД (по schema.prisma)
 
-### Таблицы (16)
+### Таблицы и модели (16)
+- `User`
 - `Category`
-- `Collection`
+- `Test`
+- `Question`
 - `Lecture`
 - `LectureTaskProgress`
-- `PomodoroSession`
-- `Question`
-- `Test`
 - `TestQuestion`
 - `TestResult`
-- `User`
+- `PomodoroSession`
+- `CombinedTestResult` → `combined_test_results`
+- `CategoryTest` → `category_tests`
+- `Collection`
+- `CollectionTest` → `collection_tests`
+- `UserTestList` → `user_test_lists`
+- `UserTestListItem` → `user_test_list_items`
 - `_prisma_migrations`
-- `category_tests`
-- `collection_tests`
-- `combined_test_results`
-- `user_test_list_items`
-- `user_test_lists`
 
 ### Внешние ключи (FK)
-- `Category.parentId -> Category.id`
-- `PomodoroSession.userId -> User.id`
-- `Question.lectureId -> Lecture.id`
-- `LectureTaskProgress.userId -> User.id`
-- `LectureTaskProgress.lectureId -> Lecture.id`
-- `TestQuestion.questionId -> Question.id`
-- `TestQuestion.testId -> Test.id`
-- `TestResult.testId -> Test.id`
-- `TestResult.userId -> User.id`
-- `category_tests.categoryId -> Category.id`
-- `category_tests.testId -> Test.id`
-- `collection_tests.collectionId -> Collection.id`
-- `collection_tests.testId -> Test.id`
-- `combined_test_results.userId -> User.id`
-- `user_test_list_items.listId -> user_test_lists.id`
-- `user_test_list_items.testId -> Test.id`
-- `user_test_lists.userId -> User.id`
+- `Category.parentId → Category.id`
+- `Question.lectureId → Lecture.id`
+- `LectureTaskProgress.userId → User.id`
+- `LectureTaskProgress.lectureId → Lecture.id`
+- `PomodoroSession.userId → User.id`
+- `TestQuestion.questionId → Question.id`
+- `TestQuestion.testId → Test.id`
+- `TestResult.testId → Test.id`
+- `TestResult.userId → User.id`
+- `CategoryTest.categoryId → Category.id`
+- `CategoryTest.testId → Test.id`
+- `CollectionTest.collectionId → Collection.id`
+- `CollectionTest.testId → Test.id`
+- `UserTestList.userId → User.id`
+- `UserTestListItem.listId → UserTestList.id`
+- `UserTestListItem.testId → Test.id`
+- `CombinedTestResult.userId → User.id`
+
+### Важно
+- Связь тестов с категориями идёт **только** через `CategoryTest` (Many‑to‑Many).
 
 ## Ключевые сущности и связи
 
-- **User** → результаты тестов, помодоро, списки, комбинированные результаты
+- **User** → результаты тестов, помодоро, списки, комбинированные результаты, прогресс по заданиям
+  - `User.skipTasksWarning` — настройка показа предупреждения перед ответами заданий
 - **Test** ↔ **Question** через **TestQuestion** (с `order`)
 - **Lecture** ↔ **Question** (у `Question` есть `lectureId`)
-  - Лекция состоит из четырёх частей: основной текст, сценарии, пример и задания
-  - `Lecture.content` — основной текст лекции
+  - Лекция состоит из 4 частей: основной текст, сценарии, пример, задания
+  - `Lecture.content` — основной текст
   - `Lecture.scenariosContent` — сценарии (опционально)
   - `Lecture.exampleContent` — пример (опционально)
   - `Lecture.tasksContent` — задания (опционально)
-- **LectureTaskProgress** — прогресс по заданиям
-  - `LectureTaskProgress.userId` → `User.id`
-  - `LectureTaskProgress.lectureId` → `Lecture.id`
+- **LectureTaskProgress** — прогресс по заданиям (уникально: `userId + lectureId + taskId`)
   - `LectureTaskProgress.taskId` — идентификатор задания (например, `task-1`)
-- **Category** ↔ **Test** через **CategoryTest**
-- **Collection** ↔ **Test** через **CollectionTest**
-- **UserTestList** ↔ **Test** через **UserTestListItem**
+- **Category** ↔ **Test** через **CategoryTest** (Many‑to‑Many)
+- **Collection** ↔ **Test** через **CollectionTest** (Many‑to‑Many)
+- **UserTestList** ↔ **Test** через **UserTestListItem** (Many‑to‑Many)
+- **CombinedTestResult** — агрегированные результаты по пользовательским спискам
 
 ## ER‑схема (текст)
 
@@ -303,7 +306,7 @@ WHERE ct.id IS NULL;
 
 ## Важные примечания
 
-- Не используйте старое поле `Test.categoryId` (deprecated).
+- Связь тестов с категориями только через `CategoryTest` (Many‑to‑Many).
 - Для контента всегда предпочитайте скрипты в `scripts/` — они сохраняют правильные связи.
 - Лекции читаются в UI по `Question.lectureId`, поэтому важна корректная привязка.
 - Вкладка «Сценарии» показывается только если `Lecture.scenariosContent` не пустой.

@@ -5,20 +5,25 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import DashboardHeader from '@/components/layout/DashboardHeader';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
-  fetchUserLists,
-  createUserList,
-  deleteUserList,
-  removeTestFromList,
-} from '@/store/userListsSlice';
+  useGetUserListsQuery,
+  useCreateUserListMutation,
+  useDeleteUserListMutation,
+  useRemoveTestFromListMutation,
+} from '@/features/user-lists';
 import styles from './my-lists.module.scss';
 
 export default function MyListsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const dispatch = useAppDispatch();
-  const { lists, loading, error } = useAppSelector((state) => state.userLists);
+
+  // RTK Query hooks
+  const { data: lists = [], isLoading: loading, error } = useGetUserListsQuery(undefined, {
+    skip: !session
+  });
+  const [createList] = useCreateUserListMutation();
+  const [deleteList] = useDeleteUserListMutation();
+  const [removeTest] = useRemoveTestFromListMutation();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -33,23 +38,15 @@ export default function MyListsPage() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (session) {
-      dispatch(fetchUserLists());
-    }
-  }, [session, dispatch]);
-
   const handleCreateList = async () => {
     if (!newListName.trim()) return;
 
     try {
-      await dispatch(
-        createUserList({
-          name: newListName.trim(),
-          description: newListDescription.trim() || undefined,
-          icon: newListIcon,
-        })
-      ).unwrap();
+      await createList({
+        name: newListName.trim(),
+        description: newListDescription.trim() || undefined,
+        icon: newListIcon,
+      }).unwrap();
 
       setNewListName('');
       setNewListDescription('');
@@ -66,7 +63,7 @@ export default function MyListsPage() {
     }
 
     try {
-      await dispatch(deleteUserList(listId)).unwrap();
+      await deleteList(listId).unwrap();
     } catch (err) {
       console.error('Error deleting list:', err);
     }
@@ -78,7 +75,7 @@ export default function MyListsPage() {
     }
 
     try {
-      await dispatch(removeTestFromList({ listId, testId })).unwrap();
+      await removeTest({ listId, testId }).unwrap();
     } catch (err) {
       console.error('Error removing test:', err);
     }
@@ -131,7 +128,7 @@ export default function MyListsPage() {
 
   const handleTakeAllTests = (listId: string) => {
     const list = lists.find(l => l.id === listId);
-    if (!list || list.items.length === 0) return;
+    if (!list || !list.items || list.items.length === 0) return;
 
     const testIds = list.items.map(item => item.testId).join(',');
     router.push(`/combined-test?tests=${testIds}&listName=${encodeURIComponent(list.name)}`);
@@ -176,7 +173,7 @@ export default function MyListsPage() {
               <strong>{lists.length}</strong> {lists.length === 1 ? 'список' : lists.length < 5 ? 'списка' : 'списков'}
             </span>
             <span className={styles.statItem}>
-              <strong>{lists.reduce((sum, list) => sum + list.items.length, 0)}</strong> тестов всего
+              <strong>{lists.reduce((sum, list) => sum + (list.items?.length || 0), 0)}</strong> тестов всего
             </span>
           </div>
           <button className={styles.createButton} onClick={() => setShowCreateModal(true)}>
@@ -184,7 +181,7 @@ export default function MyListsPage() {
           </button>
         </div>
 
-        {error && <div className={styles.error}>{error}</div>}
+        {error && <div className={styles.error}>Ошибка загрузки списков</div>}
 
         {lists.length === 0 ? (
           <div className={styles.emptyState}>
@@ -220,14 +217,14 @@ export default function MyListsPage() {
 
                   <div className={styles.listStats}>
                     <span className={styles.testCount}>
-                      {list.items.length} {list.items.length === 1 ? 'тест' : list.items.length < 5 ? 'теста' : 'тестов'}
+                      {list.items?.length || 0} {(list.items?.length || 0) === 1 ? 'тест' : (list.items?.length || 0) < 5 ? 'теста' : 'тестов'}
                     </span>
                     <span className={styles.createdDate}>
                       Создан {new Date(list.createdAt).toLocaleDateString('ru-RU')}
                     </span>
                   </div>
 
-                  {list.items.length > 0 && (
+                  {(list.items?.length || 0) > 0 && (
                     <>
                       <div className={styles.actionButtons}>
                         <button
@@ -249,9 +246,9 @@ export default function MyListsPage() {
                           <div className={styles.selectionControls}>
                             <button
                               className={styles.selectAllButton}
-                              onClick={() => toggleAllTests(list.id, list.items.map(item => item.testId))}
+                              onClick={() => toggleAllTests(list.id, list.items?.map(item => item.testId) || [])}
                             >
-                              {(selectedTests[list.id]?.size === list.items.length) ? '☐ Снять все' : '☑ Выбрать все'}
+                              {(selectedTests[list.id]?.size === (list.items?.length || 0)) ? '☐ Снять все' : '☑ Выбрать все'}
                             </button>
                             <button
                               className={styles.takeSelectedButton}
@@ -263,7 +260,7 @@ export default function MyListsPage() {
                           </div>
 
                           <div className={styles.testsList}>
-                            {list.items.map((item) => (
+                            {list.items?.map((item) => (
                               <div key={item.id} className={styles.testItem}>
                                 <input
                                   type="checkbox"
@@ -272,16 +269,16 @@ export default function MyListsPage() {
                                   onChange={() => toggleTestSelection(list.id, item.testId)}
                                 />
                                 <Link href={`/tests/${item.testId}`} className={styles.testLink}>
-                                  <span className={styles.testTitle}>{item.test.title}</span>
-                                  <span className={`${styles.testDifficulty} ${styles[item.test.difficulty]}`}>
-                                    {item.test.difficulty === 'beginner' && 'Начальный'}
-                                    {item.test.difficulty === 'intermediate' && 'Средний'}
-                                    {item.test.difficulty === 'advanced' && 'Продвинутый'}
+                                  <span className={styles.testTitle}>{item.test?.title || 'Неизвестный тест'}</span>
+                                  <span className={`${styles.testDifficulty} ${item.test?.difficulty ? styles[item.test.difficulty] : ''}`}>
+                                    {item.test?.difficulty === 'beginner' && 'Начальный'}
+                                    {item.test?.difficulty === 'intermediate' && 'Средний'}
+                                    {item.test?.difficulty === 'advanced' && 'Продвинутый'}
                                   </span>
                                 </Link>
                                 <button
                                   className={styles.removeButton}
-                                  onClick={() => handleRemoveTest(list.id, item.testId, item.test.title)}
+                                  onClick={() => handleRemoveTest(list.id, item.testId, item.test?.title || 'тест')}
                                   title="Удалить из списка"
                                 >
                                   ✕
@@ -294,7 +291,7 @@ export default function MyListsPage() {
                     </>
                   )}
 
-                  {list.items.length === 0 && (
+                  {(!list.items || list.items.length === 0) && (
                     <div className={styles.emptyList}>
                       <p>Список пуст</p>
                       <Link href="/tests" className={styles.addTestsLink}>

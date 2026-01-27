@@ -1,0 +1,48 @@
+@use '@/styles/tokens' as *;
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: $font-weight-medium;
+  border-radius: $border-radius-full;
+  white-space: nowrap;
+  transition: $transition-all;
+}
+
+/* Sizes */
+.sm {
+  padding: $spacing-1 $spacing-3;
+  font-size: $font-size-xs;
+}
+
+.md {
+  padding: $spacing-2 $spacing-4;
+  font-size: $font-size-sm;
+}
+
+/* Variants */
+.default {
+  background: $color-gray-200;
+  color: $color-gray-700;
+}
+
+.success {
+  background: $color-success-light;
+  color: $color-success-text;
+}
+
+.error {
+  background: $color-error-light;
+  color: $color-error-text;
+}
+
+.warning {
+  background: $color-warning-light;
+  color: $color-warning-text;
+}
+
+.info {
+  background: $color-info-light;
+  color: $color-info-text;
+}

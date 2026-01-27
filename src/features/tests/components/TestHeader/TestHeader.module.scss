@@ -1,0 +1,77 @@
+@use '@/styles/tokens.scss' as *;
+@use '@/styles/utilities.scss' as *;
+
+.container {
+  @include flex-column;
+  gap: $spacing-md;
+  width: 100%;
+  padding: $spacing-lg;
+  background: white;
+  border-radius: $border-radius-xl;
+  box-shadow: $shadow-md;
+
+  @include mobile {
+    padding: $spacing-md;
+  }
+}
+
+.headerTop {
+  @include flex-between;
+  gap: $spacing-md;
+  width: 100%;
+
+  @include mobile {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.title {
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin: 0;
+  flex: 1;
+
+  @include mobile {
+    font-size: $font-size-xl;
+  }
+}
+
+.modeBadge {
+  @include flex-center;
+  gap: $spacing-xs;
+  padding: $spacing-sm $spacing-md;
+  background: $color-info-light;
+  border: 1px solid $color-info;
+  border-radius: $border-radius-lg;
+  color: $color-info-text;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  white-space: nowrap;
+}
+
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background: $color-gray-200;
+  border-radius: $border-radius-full;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: $color-primary-gradient;
+  transition: width 0.3s ease;
+}
+
+.questionCounter {
+  font-size: $font-size-base;
+  color: $color-text-secondary;
+  text-align: center;
+  margin: 0;
+
+  @include mobile {
+    font-size: $font-size-sm;
+  }
+}

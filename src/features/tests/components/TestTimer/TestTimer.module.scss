@@ -1,0 +1,44 @@
+@use '@/styles/tokens.scss' as *;
+@use '@/styles/utilities.scss' as *;
+
+.timer {
+  @include flex-center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  background: $color-background-secondary;
+  border: 2px solid $color-border;
+  border-radius: $border-radius-lg;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  transition: $transition-all;
+
+  &.warning {
+    border-color: $color-warning;
+    background: $color-warning-light;
+    color: $color-warning-text;
+    animation: pulse 1s ease-in-out infinite;
+  }
+}
+
+.icon {
+  font-size: $font-size-xl;
+  line-height: 1;
+}
+
+.time {
+  font-variant-numeric: tabular-nums;
+  min-width: 4ch;
+  text-align: center;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}

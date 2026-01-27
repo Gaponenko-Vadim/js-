@@ -5,38 +5,22 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import DashboardHeader from '@/components/layout/DashboardHeader';
 import LectureModal from '@/components/lecture/LectureModal';
+import { useGetCategoriesQuery, type Category } from '@/features/categories';
+import { useGetLecturesQuery, type Lecture } from '@/features/lectures';
 import styles from './lectures.module.scss';
-
-type Category = {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  icon: string;
-  order: number;
-  _count: {
-    tests: number;
-  };
-};
-
-type Lecture = {
-  id: string;
-  title: string;
-  topic: string;
-  content: string;
-  questionsCount: number;
-  categories: string[];
-};
 
 function LecturesPageContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [lectures, setLectures] = useState<Lecture[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null);
+
+  // RTK Query hooks
+  const { data: categories = [], isLoading: categoriesLoading } = useGetCategoriesQuery();
+  const { data: lectures = [], isLoading: lecturesLoading } = useGetLecturesQuery();
+
+  const loading = categoriesLoading || lecturesLoading;
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -50,56 +34,6 @@ function LecturesPageContent() {
       setSelectedCategory(categoryParam);
     }
   }, [searchParams]);
-
-  useEffect(() => {
-    if (session) {
-      fetchCategories();
-    }
-  }, [session]);
-
-  useEffect(() => {
-    if (session && selectedCategory) {
-      fetchLectures();
-    }
-  }, [session, selectedCategory]);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch('/api/categories');
-      if (response.ok) {
-        const data = await response.json();
-        setCategories(data);
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchLectures = async () => {
-    setLoading(true);
-    try {
-      const url = selectedCategory
-        ? `/api/lectures?category=${selectedCategory}`
-        : '/api/lectures';
-
-      const response = await fetch(url, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setLectures(data);
-      }
-    } catch (error) {
-      console.error('Error fetching lectures:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (status === 'loading') {
     return <div className={styles.loading}>Загрузка...</div>;

@@ -1,0 +1,129 @@
+@use '@/styles/tokens.scss' as *;
+@use '@/styles/utilities.scss' as *;
+
+.container {
+  @include flex-column;
+  gap: $spacing-lg;
+  width: 100%;
+}
+
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background: $color-gray-200;
+  border-radius: $border-radius-full;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: $color-primary-gradient;
+  transition: width 0.3s ease;
+}
+
+.questionCounter {
+  font-size: $font-size-base;
+  color: $color-text-secondary;
+  text-align: center;
+  margin: 0;
+}
+
+.questionText {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  line-height: $line-height-relaxed;
+  margin: 0;
+  text-align: center;
+
+  @include mobile {
+    font-size: $font-size-lg;
+  }
+}
+
+.options {
+  @include flex-column;
+  gap: $spacing-md;
+  width: 100%;
+}
+
+.option {
+  @include flex-start;
+  gap: $spacing-md;
+  width: 100%;
+  padding: $spacing-md $spacing-lg;
+  background: $color-background-secondary;
+  border: 2px solid $color-border;
+  border-radius: $border-radius-lg;
+  cursor: pointer;
+  transition: $transition-all;
+  text-align: left;
+
+  &:hover {
+    border-color: $color-primary;
+    background: $color-primary-lighter;
+    transform: translateX(4px);
+  }
+
+  &.selected {
+    border-color: $color-primary;
+    background: $color-primary-lighter;
+    box-shadow: $shadow-primary;
+  }
+
+  @include mobile {
+    padding: $spacing-sm $spacing-md;
+  }
+}
+
+.optionLabel {
+  @include flex-center;
+  min-width: 32px;
+  height: 32px;
+  background: $color-primary;
+  color: white;
+  border-radius: $border-radius-circle;
+  font-weight: $font-weight-bold;
+  font-size: $font-size-sm;
+  flex-shrink: 0;
+
+  .selected & {
+    background: $color-primary-dark;
+  }
+}
+
+.optionText {
+  flex: 1;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: $line-height-relaxed;
+
+  @include mobile {
+    font-size: $font-size-base;
+  }
+}
+
+.lectureHint {
+  @include flex-center;
+  padding-top: $spacing-md;
+  border-top: 1px solid $color-border;
+}
+
+.hintButton {
+  padding: $spacing-sm $spacing-md;
+  background: $color-info-light;
+  border: 1px solid $color-info;
+  border-radius: $border-radius-md;
+  color: $color-info-text;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: $transition-all;
+
+  &:hover {
+    background: $color-info;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}

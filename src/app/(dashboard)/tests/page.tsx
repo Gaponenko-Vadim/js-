@@ -2,39 +2,14 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import DashboardHeader from '@/components/layout/DashboardHeader';
 import AddToListModal from '@/components/lists/AddToListModal';
+import { useGetCategoriesQuery, type Category } from '@/features/categories';
+import { useGetTestsQuery, type Test } from '@/features/tests';
+import { useGetResultsQuery } from '@/features/results';
 import styles from './tests.module.scss';
-
-type Category = {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  icon: string;
-  order: number;
-  _count: {
-    tests: number;
-  };
-};
-
-type Test = {
-  id: string;
-  title: string;
-  description: string;
-  difficulty: string;
-  tags: string[];
-  categories?: {
-    category: {
-      id: string;
-      slug: string;
-      name: string;
-      icon: string;
-    };
-  }[];
-};
 
 type TestResult = {
   id: string;
@@ -47,20 +22,24 @@ function TestsPageContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [tests, setTests] = useState<Test[]>([]);
-  const [filteredTests, setFilteredTests] = useState<Test[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
   const [selectedProfession, setSelectedProfession] = useState<string>('all');
   const [showMarathons, setShowMarathons] = useState<boolean>(false);
-  const [results, setResults] = useState<TestResult[]>([]);
   const [addToListModal, setAddToListModal] = useState<{ isOpen: boolean; testId: string; testTitle: string }>({
     isOpen: false,
     testId: '',
     testTitle: '',
   });
+
+  // RTK Query hooks
+  const { data: categories = [], isLoading: categoriesLoading } = useGetCategoriesQuery();
+  const { data: tests = [], isLoading: testsLoading } = useGetTestsQuery(
+    selectedCategory ? { category: selectedCategory } : {}
+  );
+  const { data: results = [], isLoading: resultsLoading } = useGetResultsQuery();
+
+  const loading = categoriesLoading || testsLoading || resultsLoading;
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -76,21 +55,8 @@ function TestsPageContent() {
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    if (session) {
-      fetchCategories();
-      fetchTests();
-      fetchResults();
-    }
-  }, [session]);
-
-  useEffect(() => {
-    if (session && selectedCategory) {
-      fetchTests();
-    }
-  }, [selectedCategory]);
-
-  useEffect(() => {
+  // Фильтрация тестов через useMemo
+  const filteredTests = useMemo(() => {
     let filtered = tests;
 
     // Разделяем марафоны и обычные тесты
@@ -109,54 +75,11 @@ function TestsPageContent() {
 
     // Фильтрация по профессии (работает для обоих режимов)
     if (selectedProfession !== 'all') {
-      filtered = filtered.filter((test) => test.tags.includes(selectedProfession));
+      filtered = filtered.filter((test) => test.tags?.includes(selectedProfession));
     }
 
-    setFilteredTests(filtered);
+    return filtered;
   }, [selectedDifficulty, selectedProfession, tests, showMarathons]);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch('/api/categories');
-      if (response.ok) {
-        const data = await response.json();
-        setCategories(data);
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-
-  const fetchTests = async () => {
-    try {
-      const url = selectedCategory
-        ? `/api/tests?category=${selectedCategory}`
-        : '/api/tests';
-
-      const response = await fetch(url);
-      if (response.ok) {
-        const data = await response.json();
-        setTests(data);
-        setFilteredTests(data);
-      }
-    } catch (error) {
-      console.error('Error fetching tests:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchResults = async () => {
-    try {
-      const response = await fetch('/api/results');
-      if (response.ok) {
-        const data = await response.json();
-        setResults(data);
-      }
-    } catch (error) {
-      console.error('Error fetching results:', error);
-    }
-  };
 
   if (status === 'loading' || loading) {
     return <div className={styles.loading}>Загрузка...</div>;
@@ -295,7 +218,7 @@ function TestsPageContent() {
                     <span className={styles.categoryName}>{category.name}</span>
                     <span className={styles.categoryDescription}>{category.description}</span>
                     <span className={styles.categoryCount}>
-                      {category._count.tests} {category._count.tests === 1 ? 'тест' : 'тестов'}
+                      {category._count?.tests ?? 0} {category._count?.tests === 1 ? 'тест' : 'тестов'}
                     </span>
                   </div>
                 </button>

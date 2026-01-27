@@ -1,3 +1,13 @@
+// ============================================
+// Global Styles - REST API Trainer
+// ============================================
+// Импортируем design system
+@use './tokens.scss' as *;
+@use './utilities.scss' as *;
+
+// ============================================
+// GLOBAL RESETS
+// ============================================
 * {
   margin: 0;
   padding: 0;
@@ -6,20 +16,41 @@
 
 html,
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  line-height: $line-height-normal;
+  color: $color-text-primary;
+  background: $color-background;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #f9fafb;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: $font-family-mono;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+  transition: $transition-colors;
+}
+
+// ============================================
+// GLOBAL UTILITIES
+// ============================================
+
+// Smooth scrolling
+html {
+  scroll-behavior: smooth;
+}
+
+// Улучшенные фокус-стейты для доступности
+*:focus-visible {
+  outline: 2px solid $color-primary;
+  outline-offset: 2px;
+}
+
+// Скрыть outline для мыши (сохранить для клавиатуры)
+*:focus:not(:focus-visible) {
+  outline: none;
 }

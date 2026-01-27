@@ -1,0 +1,143 @@
+@use '@/styles/tokens.scss' as *;
+@use '@/styles/utilities.scss' as *;
+
+.overlay {
+  @include fixed-full;
+  @include flex-center;
+  background: $color-overlay;
+  z-index: $z-index-modal;
+  padding: $spacing-lg;
+}
+
+.dialog {
+  width: 100%;
+  max-width: 600px;
+  background: white;
+  border-radius: $border-radius-2xl;
+  box-shadow: $shadow-2xl;
+  animation: slideUp 0.3s ease-out;
+}
+
+.content {
+  @include flex-column;
+  gap: $spacing-lg;
+  padding: $spacing-xl;
+
+  @include mobile {
+    padding: $spacing-lg;
+  }
+}
+
+.title {
+  font-size: $font-size-3xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  text-align: center;
+  margin: 0;
+
+  @include mobile {
+    font-size: $font-size-2xl;
+  }
+}
+
+.description {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  text-align: center;
+  line-height: $line-height-relaxed;
+  margin: 0;
+
+  strong {
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+.info {
+  @include flex-column;
+  gap: $spacing-md;
+  padding: $spacing-lg;
+  background: $color-background;
+  border-radius: $border-radius-lg;
+  border: 1px solid $color-border;
+}
+
+.infoItem {
+  @include flex-start;
+  gap: $spacing-sm;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.infoIcon {
+  font-size: $font-size-xl;
+  line-height: 1;
+}
+
+.infoLabel {
+  color: $color-text-secondary;
+}
+
+.infoValue {
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+  margin-left: auto;
+}
+
+.actions {
+  @include flex-column;
+  gap: $spacing-md;
+  width: 100%;
+}
+
+.primaryButton {
+  @include button-base;
+  @include button-variant($color-primary, $color-primary-dark, white);
+  width: 100%;
+  font-size: $font-size-lg;
+  padding: $spacing-md $spacing-xl;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
+  }
+}
+
+.secondaryButton {
+  @include button-base;
+  @include button-variant($color-gray-200, $color-gray-300, $color-text-primary);
+  width: 100%;
+  padding: $spacing-md $spacing-xl;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}
+
+.backButton {
+  padding: $spacing-sm $spacing-md;
+  background: transparent;
+  border: none;
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: $transition-colors;
+  align-self: center;
+
+  &:hover {
+    color: $color-primary;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
