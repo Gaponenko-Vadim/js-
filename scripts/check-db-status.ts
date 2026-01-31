@@ -70,18 +70,14 @@ async function checkDatabaseStatus() {
       pomodoroIndexes.forEach(idx => console.log(`  - ${idx.indexname}`));
     }
 
-    // Проверка deprecated поля Test.categoryId
-    console.log('\n🔍 Проверка Test.categoryId (deprecated):');
-    const testsWithOldCategory = await prisma.$queryRaw<Array<{ count: bigint }>>`
-      SELECT COUNT(*) as count
-      FROM "Test"
-      WHERE category_id IS NOT NULL
-    `;
-    console.log(`  Тесты с category_id: ${testsWithOldCategory[0].count}`);
-
-    // Проверка CategoryTest связей
+    // Проверка Many-to-Many связей
+    console.log('\n🔍 Проверка Many-to-Many связей:');
     const categoryTests = await prisma.categoryTest.count();
+    const collectionTests = await prisma.collectionTest.count();
+    const testQuestions = await prisma.testQuestion.count();
     console.log(`  CategoryTest связи: ${categoryTests}`);
+    console.log(`  CollectionTest связи: ${collectionTests}`);
+    console.log(`  TestQuestion связи: ${testQuestions}`);
 
     // Проверка наличия поля mode в TestResult
     console.log('\n🔍 Проверка поля mode в TestResult:');

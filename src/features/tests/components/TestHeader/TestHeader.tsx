@@ -35,31 +35,40 @@ export function TestHeader({
 
   return (
     <div className={styles.container}>
-      {/* Title and Timer/Badge */}
+      {/* Title and Mode Badge */}
       <div className={styles.headerTop}>
-        <h1 className={styles.title}>{title}</h1>
+        <div className={styles.titleSection}>
+          <h1 className={styles.title}>{title}</h1>
+          {testMode === 'learning' && (
+            <div className={styles.modeBadge}>📚 Режим обучения</div>
+          )}
+          {testMode === 'exam' && (
+            <div className={styles.examBadge}>🎯 Режим экзамена</div>
+          )}
+        </div>
 
         {testMode === 'exam' && timeLeft !== undefined && (
           <TestTimer timeLeft={timeLeft} isWarning={isTimeWarning} />
         )}
-
-        {testMode === 'learning' && (
-          <div className={styles.modeBadge}>📚 Обучение</div>
-        )}
       </div>
 
-      {/* Progress Bar */}
-      <div className={styles.progressBar}>
-        <div
-          className={styles.progressFill}
-          style={{ width: `${progress}%` }}
-        />
+      {/* Progress Section */}
+      <div className={styles.progressSection}>
+        <div className={styles.progressInfo}>
+          <span className={styles.questionCounter}>
+            Вопрос {currentQuestion} из {totalQuestions}
+          </span>
+          <span className={styles.progressPercentage}>
+            {Math.round(progress)}%
+          </span>
+        </div>
+        <div className={styles.progressBar}>
+          <div
+            className={styles.progressFill}
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </div>
-
-      {/* Question Counter */}
-      <p className={styles.questionCounter}>
-        Вопрос {currentQuestion} из {totalQuestions}
-      </p>
     </div>
   );
 }

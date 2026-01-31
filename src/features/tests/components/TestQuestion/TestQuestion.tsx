@@ -33,20 +33,8 @@ export function TestQuestion({
   showLectureButton = false,
   onOpenLecture
 }: TestQuestionProps) {
-  const progress = (questionNumber / totalQuestions) * 100;
-
   return (
     <div className={styles.container}>
-      {/* Progress Bar */}
-      <div className={styles.progressBar}>
-        <div className={styles.progressFill} style={{ width: `${progress}%` }} />
-      </div>
-
-      {/* Question Counter */}
-      <p className={styles.questionCounter}>
-        Вопрос {questionNumber} из {totalQuestions}
-      </p>
-
       {/* Question Text */}
       <h2 className={styles.questionText}>{question.question}</h2>
 

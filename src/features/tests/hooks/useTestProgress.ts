@@ -154,10 +154,9 @@ export function useTestProgress({
               : 0;
 
             if (remaining > 0) {
-              // Время еще есть - автоматически восстанавливаем
-              setUserAnswers(state.userAnswers);
-              setCurrentQuestionIndex(state.currentQuestionIndex);
-              setSelectedAnswer(state.selectedAnswer);
+              // Время еще есть - сохраняем состояние для автовосстановления
+              setSavedState(state);
+              // НЕ показываем диалог для экзамена - автовосстановление произойдет в TestPageContent
             } else {
               // Время истекло - удаляем сохранение
               sessionStorage.removeItem(`test_${testId}_state`);

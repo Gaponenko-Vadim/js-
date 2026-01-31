@@ -1,25 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { NextResponse } from 'next/server';
+import { withAuth } from '@/shared/api/middleware/authMiddleware';
 import { prisma } from '@/lib/prisma';
 
 // GET /api/user-lists - Получить все списки пользователя
-export async function GET() {
+export const GET = withAuth(async (req: Request, { user }) => {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
     const lists = await prisma.userTestList.findMany({
       where: { userId: user.id },
       include: {
@@ -47,29 +32,13 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
 // POST /api/user-lists - Создать новый список
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: Request, { user }) => {
   try {
     console.log('[API] POST /api/user-lists - Start');
-    const session = await getServerSession(authOptions);
-    console.log('[API] Session:', session?.user?.email);
-
-    if (!session?.user?.email) {
-      console.log('[API] No session - returning 401');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-    console.log('[API] User found:', user?.id);
-
-    if (!user) {
-      console.log('[API] User not found - returning 404');
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
+    console.log('[API] User found:', user.id);
 
     const body = await request.json();
     console.log('[API] Request body:', body);
@@ -117,4 +86,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

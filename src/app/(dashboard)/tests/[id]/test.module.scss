@@ -1,7 +1,11 @@
 .container {
   min-height: 100vh;
-  background: #f9fafb;
-  padding: 32px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  padding: 2.5rem;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 }
 
 .loading {
@@ -85,12 +89,17 @@
 }
 
 .questionCard {
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
   background: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+  }
 }
 
 .questionText {

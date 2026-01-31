@@ -1,16 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { NextResponse } from 'next/server';
+import { withAuth } from '@/shared/api/middleware/authMiddleware';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(req: NextRequest) {
+export const GET = withAuth(async (req: Request) => {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(req.url);
     const difficulty = searchParams.get('difficulty');
     const profession = searchParams.get('profession');
@@ -98,4 +91,4 @@ export async function GET(req: NextRequest) {
     console.error('Error fetching tests:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

@@ -37,18 +37,22 @@ enum CollectionType {
 }
 
 model User {
-  id                  String                @id @default(cuid())
-  email               String                @unique
-  password            String
-  name                String?
-  skipTasksWarning    Boolean               @default(false)
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
-  testResults         TestResult[]
-  pomodoroSessions    PomodoroSession[]
-  testLists           UserTestList[] // Пользовательские списки тестов
-  combinedTestResults CombinedTestResult[] // Результаты комбинированных тестов
-  taskProgress        LectureTaskProgress[]
+  id                     String                     @id @default(cuid())
+  email                  String                     @unique
+  password               String
+  name                   String?
+  emailVerified          DateTime? // Дата подтверждения email (null = не подтвержден)
+  skipTasksWarning       Boolean                    @default(false)
+  createdAt              DateTime                   @default(now())
+  updatedAt              DateTime                   @updatedAt
+  testResults            TestResult[]
+  pomodoroSessions       PomodoroSession[]
+  testLists              UserTestList[] // Пользовательские списки тестов
+  combinedTestResults    CombinedTestResult[] // Результаты комбинированных тестов
+  taskProgress           LectureTaskProgress[]
+  emailVerificationTokens EmailVerificationToken[] // Токены подтверждения email
+
+  @@index([emailVerified])
 }
 
 model Category {
@@ -188,6 +192,9 @@ model Lecture {
   updatedAt        DateTime              @updatedAt
   questions        Question[] // Связанные вопросы
   taskProgress     LectureTaskProgress[]
+
+  @@index([title])
+  @@index([topic])
 }
 
 model LectureTaskProgress {
@@ -318,4 +325,23 @@ model UserTestListItem {
   @@unique([listId, testId])
   @@index([listId, order])
   @@map("user_test_list_items")
+}
+
+// ============================================================
+// EMAIL VERIFICATION
+// ============================================================
+
+// Токены для подтверждения email при регистрации
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique // Уникальный токен для ссылки подтверждения
+  expiresAt DateTime // Срок действия токена (24 часа)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("email_verification_tokens")
 }

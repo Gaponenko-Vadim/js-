@@ -1,37 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { NextResponse } from 'next/server';
+import { withAuth } from '@/shared/api/middleware/authMiddleware';
 import { prisma } from '@/lib/prisma';
 
-type Params = {
-  params: Promise<{
-    id: string;
-  }>;
-};
-
 // POST /api/user-lists/[id]/tests - Добавить тест в список
-export async function POST(request: NextRequest, segmentData: Params) {
+export const POST = withAuth(async (request: Request, { user, params }) => {
   try {
     console.log('[API] POST /api/user-lists/[id]/tests - Start');
-    const params = await segmentData.params;
-    console.log('[API] Params:', params);
-    const session = await getServerSession(authOptions);
-    console.log('[API] Session:', session?.user?.email);
-
-    if (!session?.user?.email) {
-      console.log('[API] No session - returning 401');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-    console.log('[API] User found:', user?.id);
-
-    if (!user) {
-      console.log('[API] User not found - returning 404');
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
+    const resolvedParams = await params;
+    console.log('[API] Params:', resolvedParams);
+    console.log('[API] User found:', user.id);
 
     const body = await request.json();
     console.log('[API] Request body:', body);
@@ -47,7 +24,7 @@ export async function POST(request: NextRequest, segmentData: Params) {
     // Проверяем что список принадлежит пользователю
     const list = await prisma.userTestList.findFirst({
       where: {
-        id: params.id,
+        id: resolvedParams.id,
         userId: user.id,
       },
     });
@@ -69,7 +46,7 @@ export async function POST(request: NextRequest, segmentData: Params) {
     const existing = await prisma.userTestListItem.findUnique({
       where: {
         listId_testId: {
-          listId: params.id,
+          listId: resolvedParams.id,
           testId: testId,
         },
       },
@@ -84,7 +61,7 @@ export async function POST(request: NextRequest, segmentData: Params) {
 
     // Получаем максимальный order для нового элемента
     const maxOrderItem = await prisma.userTestListItem.findFirst({
-      where: { listId: params.id },
+      where: { listId: resolvedParams.id },
       orderBy: { order: 'desc' },
     });
 
@@ -93,7 +70,7 @@ export async function POST(request: NextRequest, segmentData: Params) {
     // Добавляем тест в список
     const item = await prisma.userTestListItem.create({
       data: {
-        listId: params.id,
+        listId: resolvedParams.id,
         testId: testId,
         order: newOrder,
       },
@@ -118,4 +95,4 @@ export async function POST(request: NextRequest, segmentData: Params) {
       { status: 500 }
     );
   }
-}
+});

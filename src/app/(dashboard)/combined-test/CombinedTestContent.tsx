@@ -102,6 +102,19 @@ export default function CombinedTestContent() {
     }
   }, [status, router]);
 
+  // Автоматическое восстановление для режима экзамена
+  useEffect(() => {
+    if (savedState && savedState.testMode === 'exam' && !testStarted) {
+      // Для экзамена автоматически восстанавливаем без диалога
+      restoreProgress();
+      setTestMode(savedState.testMode);
+      setTestStarted(true);
+      if (savedState.endTime) {
+        setEndTime(savedState.endTime);
+      }
+    }
+  }, [savedState, testStarted, restoreProgress, setEndTime]);
+
   const startTest = (mode: TestMode) => {
     setTestMode(mode);
     setTestStarted(true);
@@ -113,6 +126,10 @@ export default function CombinedTestContent() {
   const handleRestoreTest = () => {
     restoreProgress();
     setTestStarted(true);
+    if (savedState && savedState.testMode === 'exam' && savedState.endTime) {
+      setTestMode(savedState.testMode);
+      setEndTime(savedState.endTime);
+    }
   };
 
   const handleStartFresh = () => {

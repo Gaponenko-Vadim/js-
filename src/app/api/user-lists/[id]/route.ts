@@ -1,35 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { NextResponse } from 'next/server';
+import { withAuth } from '@/shared/api/middleware/authMiddleware';
 import { prisma } from '@/lib/prisma';
 
-type Params = {
-  params: Promise<{
-    id: string;
-  }>;
-};
-
 // GET /api/user-lists/[id] - Получить конкретный список
-export async function GET(request: NextRequest, segmentData: Params) {
-  const params = await segmentData.params;
+export const GET = withAuth(async (request: Request, { user, params }) => {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
+    const resolvedParams = await params;
     const list = await prisma.userTestList.findFirst({
       where: {
-        id: params.id,
+        id: resolvedParams.id,
         userId: user.id,
       },
       include: {
@@ -60,32 +39,18 @@ export async function GET(request: NextRequest, segmentData: Params) {
       { status: 500 }
     );
   }
-}
+});
 
 // PUT /api/user-lists/[id] - Обновить список
-export async function PUT(request: NextRequest, segmentData: Params) {
-  const params = await segmentData.params;
+export const PUT = withAuth(async (request: Request, { user, params }) => {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
+    const resolvedParams = await params;
     const body = await request.json();
     const { name, description, icon, color } = body;
 
     const list = await prisma.userTestList.updateMany({
       where: {
-        id: params.id,
+        id: resolvedParams.id,
         userId: user.id,
       },
       data: {
@@ -101,7 +66,7 @@ export async function PUT(request: NextRequest, segmentData: Params) {
     }
 
     const updatedList = await prisma.userTestList.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       include: {
         items: {
           include: {
@@ -126,29 +91,15 @@ export async function PUT(request: NextRequest, segmentData: Params) {
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE /api/user-lists/[id] - Удалить список
-export async function DELETE(request: NextRequest, segmentData: Params) {
-  const params = await segmentData.params;
+export const DELETE = withAuth(async (request: Request, { user, params }) => {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
+    const resolvedParams = await params;
     const result = await prisma.userTestList.deleteMany({
       where: {
-        id: params.id,
+        id: resolvedParams.id,
         userId: user.id,
       },
     });
@@ -165,4 +116,4 @@ export async function DELETE(request: NextRequest, segmentData: Params) {
       { status: 500 }
     );
   }
-}
+});

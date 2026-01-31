@@ -1,40 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { NextResponse } from 'next/server';
+import { withAuth } from '@/shared/api/middleware/authMiddleware';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export const GET = withAuth(async (req: Request, { user }) => {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+    const userSettings = await prisma.user.findUnique({
+      where: { id: user.id },
       select: { skipTasksWarning: true }
     });
 
-    if (!user) {
+    if (!userSettings) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ skipTasksWarning: user.skipTasksWarning });
+    return NextResponse.json({ skipTasksWarning: userSettings.skipTasksWarning });
   } catch (error) {
     console.error('Error fetching user settings:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(req: NextRequest) {
+export const PATCH = withAuth(async (req: Request, { user }) => {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await req.json();
     const skipTasksWarning = body?.skipTasksWarning;
 
@@ -42,15 +29,15 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
     }
 
-    const user = await prisma.user.update({
-      where: { email: session.user.email },
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
       data: { skipTasksWarning },
       select: { skipTasksWarning: true }
     });
 
-    return NextResponse.json({ skipTasksWarning: user.skipTasksWarning });
+    return NextResponse.json({ skipTasksWarning: updatedUser.skipTasksWarning });
   } catch (error) {
     console.error('Error updating user settings:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

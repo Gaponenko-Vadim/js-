@@ -1,31 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { NextResponse } from 'next/server';
+import { withAuth } from '@/shared/api/middleware/authMiddleware';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(
-  req: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export const GET = withAuth(async (req: Request, { user, params }) => {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { id: true }
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    const params = await context.params;
+    const resolvedParams = await params;
     const progress = await prisma.lectureTaskProgress.findMany({
-      where: { userId: user.id, lectureId: params.id },
+      where: { userId: user.id, lectureId: resolvedParams.id },
       select: { taskId: true }
     });
 
@@ -36,29 +17,11 @@ export async function GET(
     console.error('Error fetching task progress:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(
-  req: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAuth(async (req: Request, { user, params }) => {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { id: true }
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    const params = await context.params;
+    const resolvedParams = await params;
     const body = await req.json();
     const taskId = typeof body?.taskId === 'string' ? body.taskId.trim() : '';
     const completed = body?.completed;
@@ -72,16 +35,16 @@ export async function PATCH(
         where: {
           userId_lectureId_taskId: {
             userId: user.id,
-            lectureId: params.id,
+            lectureId: resolvedParams.id,
             taskId
           }
         },
         update: { completedAt: new Date() },
-        create: { userId: user.id, lectureId: params.id, taskId }
+        create: { userId: user.id, lectureId: resolvedParams.id, taskId }
       });
     } else {
       await prisma.lectureTaskProgress.deleteMany({
-        where: { userId: user.id, lectureId: params.id, taskId }
+        where: { userId: user.id, lectureId: resolvedParams.id, taskId }
       });
     }
 
@@ -90,4 +53,4 @@ export async function PATCH(
     console.error('Error updating task progress:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

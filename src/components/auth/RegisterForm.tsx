@@ -46,7 +46,8 @@ export function RegisterForm() {
         return;
       }
 
-      router.push('/login');
+      // Перенаправить на /login с информацией об успешной регистрации
+      router.push(`/login?success=RegistrationSuccess&email=${encodeURIComponent(email)}`);
     } catch (err) {
       console.error('Registration error:', err);
       setError('Произошла ошибка при регистрации');

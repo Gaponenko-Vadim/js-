@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * TaskModals Component
  *
@@ -8,6 +10,7 @@
  * - Task answer modal
  */
 
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import styles from './TaskModals.module.scss';
@@ -31,11 +34,69 @@ export function TaskModals({
   onTaskAnswerAction,
   onSkipTasksWarningChange
 }: TaskModalsProps) {
+  const prepTemplate = useMemo(() => {
+    if (!prepContent) return '';
+    const match = prepContent.match(/(?:^|\n)(```|~~~)\s*\w*\s*\n([\s\S]*?)\n\1/);
+    return match?.[2]?.trim() ?? '';
+  }, [prepContent]);
+
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
+
+  useEffect(() => {
+    if (copyStatus === 'idle') return;
+    const timeoutId = window.setTimeout(() => setCopyStatus('idle'), 2000);
+    return () => window.clearTimeout(timeoutId);
+  }, [copyStatus]);
+
+  const handleCopyTemplate = useCallback(async () => {
+    if (!prepTemplate) {
+      setCopyStatus('error');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(prepTemplate);
+      setCopyStatus('copied');
+      return;
+    } catch {
+      // Fallback to execCommand for older browsers.
+    }
+
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = prepTemplate;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      textarea.style.pointerEvents = 'none';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopyStatus(successful ? 'copied' : 'error');
+    } catch {
+      setCopyStatus('error');
+    }
+  }, [prepTemplate]);
+
+  const copyLabel =
+    copyStatus === 'copied'
+      ? 'Скопировано'
+      : copyStatus === 'error'
+        ? 'Не удалось скопировать'
+        : 'Скопировать шаблон';
+
   return (
     <>
       {/* Warning Modal */}
       {showTaskWarning && selectedTask && (
-        <div className={styles.taskOverlay} onClick={onCloseTaskWarning}>
+        <div
+          className={styles.taskOverlay}
+          onClick={(event) => {
+            event.stopPropagation();
+            onCloseTaskWarning();
+          }}
+        >
           <div className={styles.taskModal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.taskModalHeader}>
               <h3>Перед просмотром ответа</h3>
@@ -45,7 +106,7 @@ export function TaskModals({
                 aria-label="Закрыть"
                 type="button"
               >
-                ✕
+                ×
               </button>
             </div>
             <div className={styles.taskModalBody}>
@@ -85,18 +146,34 @@ export function TaskModals({
 
       {/* Preparation Modal */}
       {showTasksPrep && (
-        <div className={styles.taskOverlay} onClick={onCloseTasksPrep}>
+        <div
+          className={styles.taskOverlay}
+          onClick={(event) => {
+            event.stopPropagation();
+            onCloseTasksPrep();
+          }}
+        >
           <div className={styles.taskModal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.taskModalHeader}>
               <h3>Подготовка к заданиям</h3>
-              <button
-                className={styles.taskModalClose}
-                onClick={onCloseTasksPrep}
-                aria-label="Закрыть"
-                type="button"
-              >
-                ✕
-              </button>
+              <div className={styles.taskModalHeaderActions}>
+                <button
+                  className={styles.taskModalGhost}
+                  onClick={handleCopyTemplate}
+                  type="button"
+                  disabled={!prepTemplate}
+                >
+                  {copyLabel}
+                </button>
+                <button
+                  className={styles.taskModalClose}
+                  onClick={onCloseTasksPrep}
+                  aria-label="Закрыть"
+                  type="button"
+                >
+                  ×
+                </button>
+              </div>
             </div>
             <div className={styles.taskModalBody}>
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -109,7 +186,13 @@ export function TaskModals({
 
       {/* Task Details Modal */}
       {showTaskDetails && selectedTask && (
-        <div className={styles.taskOverlay} onClick={onCloseTaskDetails}>
+        <div
+          className={styles.taskOverlay}
+          onClick={(event) => {
+            event.stopPropagation();
+            onCloseTaskDetails();
+          }}
+        >
           <div className={styles.taskModal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.taskModalHeader}>
               <h3>{selectedTask.title}</h3>
@@ -136,7 +219,13 @@ export function TaskModals({
 
       {/* Task Answer Modal */}
       {showTaskAnswer && selectedTask && (
-        <div className={styles.taskOverlay} onClick={onCloseTaskAnswer}>
+        <div
+          className={styles.taskOverlay}
+          onClick={(event) => {
+            event.stopPropagation();
+            onCloseTaskAnswer();
+          }}
+        >
           <div className={styles.taskModal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.taskModalHeader}>
               <h3>{selectedTask.title}</h3>

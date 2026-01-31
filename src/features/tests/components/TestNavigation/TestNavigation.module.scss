@@ -3,49 +3,95 @@
 
 .navigation {
   @include flex-between;
-  gap: $spacing-md;
+  gap: 1rem;
   width: 100%;
-  padding-top: $spacing-lg;
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
 
   @include mobile {
-    flex-direction: column;
+    flex-direction: column-reverse;
+    gap: 0.75rem;
   }
 }
 
 .primaryButton {
-  @include button-base;
-  @include button-variant($color-primary, $color-primary-dark, white);
-  @include hover-lift;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
   flex: 1;
-  max-width: 200px;
+  max-width: 220px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 
   @include mobile {
     max-width: 100%;
     width: 100%;
   }
 
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #5568d3 0%, #6439a0 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
   &:disabled {
-    opacity: $opacity-disabled;
+    opacity: 0.5;
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
   }
 }
 
 .secondaryButton {
-  @include button-base;
-  @include button-variant($color-gray-200, $color-gray-300, $color-text-primary);
-  @include hover-lift;
+  padding: 1rem 2rem;
+  background: white;
+  color: #6b7280;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
   flex: 1;
-  max-width: 200px;
+  max-width: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 
   @include mobile {
     max-width: 100%;
     width: 100%;
-    order: 2;
+  }
+
+  &:hover:not(:disabled) {
+    background: #f9fafb;
+    border-color: #667eea;
+    color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
   }
 
   &:disabled {
-    opacity: $opacity-disabled;
+    opacity: 0.5;
     cursor: not-allowed;
     transform: none;
   }

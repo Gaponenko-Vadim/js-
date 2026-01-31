@@ -50,6 +50,9 @@ export type { TestRestoreDialogProps } from './components/TestRestoreDialog';
 export { TestResults } from './components/TestResults';
 export type { TestResultsProps } from './components/TestResults';
 
+export { ExamExitConfirmModal } from './components/ExamExitConfirmModal';
+export type { ExamExitConfirmModalProps } from './components/ExamExitConfirmModal';
+
 // ============================================
 // UTILS
 // ============================================

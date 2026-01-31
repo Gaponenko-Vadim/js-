@@ -24,6 +24,11 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Пользователь не найден');
         }
 
+        // Проверка подтверждения email
+        if (!user.emailVerified) {
+          throw new Error('Email не подтвержден. Проверьте почту и перейдите по ссылке из письма.');
+        }
+
         const isValid = await verifyPassword(credentials.password, user.password);
 
         if (!isValid) {

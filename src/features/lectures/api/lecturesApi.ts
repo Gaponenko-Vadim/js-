@@ -7,10 +7,15 @@ import type { Lecture } from '../types';
 export const lecturesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     /**
-     * Получить все лекции
+     * Получить все лекции (опционально с фильтрацией по категории)
      */
-    getLectures: builder.query<Lecture[], void>({
-      query: () => '/lectures',
+    getLectures: builder.query<Lecture[], { category?: string } | void>({
+      query: (params) => {
+        if (!params || !params.category) {
+          return '/lectures';
+        }
+        return `/lectures?category=${params.category}`;
+      },
       providesTags: ['Lectures'],
     }),
 

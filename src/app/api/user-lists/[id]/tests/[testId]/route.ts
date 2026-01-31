@@ -1,37 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { NextResponse } from 'next/server';
+import { withAuth } from '@/shared/api/middleware/authMiddleware';
 import { prisma } from '@/lib/prisma';
 
-type Params = {
-  params: Promise<{
-    id: string;
-    testId: string;
-  }>;
-};
-
 // DELETE /api/user-lists/[id]/tests/[testId] - Удалить тест из списка
-export async function DELETE(request: NextRequest, segmentData: Params) {
-  const params = await segmentData.params;
+export const DELETE = withAuth(async (request: Request, { user, params }) => {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
+    const resolvedParams = await params;
 
     // Проверяем что список принадлежит пользователю
     const list = await prisma.userTestList.findFirst({
       where: {
-        id: params.id,
+        id: resolvedParams.id,
         userId: user.id,
       },
     });
@@ -43,8 +22,8 @@ export async function DELETE(request: NextRequest, segmentData: Params) {
     // Удаляем тест из списка
     const result = await prisma.userTestListItem.deleteMany({
       where: {
-        listId: params.id,
-        testId: params.testId,
+        listId: resolvedParams.id,
+        testId: resolvedParams.testId,
       },
     });
 
@@ -63,4 +42,4 @@ export async function DELETE(request: NextRequest, segmentData: Params) {
       { status: 500 }
     );
   }
-}
+});
